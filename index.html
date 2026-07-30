@@ -27,7 +27,7 @@ body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);}
 .filter-chip{padding:7px 14px;border-radius:16px;background:var(--paper-card);border:1.5px solid var(--grid-line);cursor:pointer;font-size:13px;color:var(--ink-soft);user-select:none;transition:.15s;}
 .filter-chip.active{background:var(--navy);color:#fff;border-color:var(--navy);font-weight:600;}
 .filter-chip:hover{opacity:.85;}
-.chip-sheet-tag{font-weight:700;opacity:.75;margin-right:3px;}
+.chip-sheet-tag{font-weight:700;text-decoration:underline;opacity:.85;margin-right:3px;}
 
 .btn-row{display:flex;gap:8px;flex-wrap:wrap;}
 .icon-btn{background:var(--paper-card);color:var(--ink);border:1.5px solid var(--ink);padding:10px 16px;border-radius:6px;cursor:pointer;font-size:13.5px;}
@@ -112,7 +112,7 @@ body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);}
     <span><i style="background:var(--signal-bg);border:1px solid var(--signal)"></i>เสร็จแล้ว</span>
   </div>
   <div class="btn-row">
-    <button class="icon-btn" onclick="openGallery()">🖼️ ดูรูปภาพหน้างาน</button>
+    <button class="icon-btn" onclick="openGallery()">📐 ดูแบบก่อสร้าง</button>
     <button class="add-btn" onclick="openModal(null)">+ เพิ่มงานใหม่</button>
   </div>
 </div>
@@ -129,20 +129,22 @@ body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);}
     <h3 id="modal-title">รายละเอียดงาน</h3>
     <div id="modal-status"></div>
     <div class="field">
-      <label>หมวดงาน (ชีต)</label>
-      <select id="f-sheet" onchange="onSheetChange()"></select>
+      <label>หมวดงาน (ชีต) — เลือกจากลิสต์ หรือพิมพ์ชื่อใหม่เพื่อสร้างแท็บใหม่ในชีต</label>
+      <input type="text" id="f-sheet" list="sheet-list" onchange="onSheetChange()">
+      <datalist id="sheet-list"></datalist>
     </div>
     <div class="two-col">
       <div class="field"><label>วันที่เริ่ม</label><input type="date" id="f-start"></div>
       <div class="field"><label>วันที่สิ้นสุด</label><input type="date" id="f-end"></div>
     </div>
     <div class="field">
-      <label>ลำดับแผน</label>
-      <select id="f-order" onchange="updateDetailPreview()"></select>
+      <label>ลำดับแผน — เลือกจากลิสต์ หรือพิมพ์เลขใหม่</label>
+      <input type="text" id="f-order" list="order-list" onchange="updateDetailPreview()">
+      <datalist id="order-list"></datalist>
     </div>
     <div class="field">
-      <label>รายละเอียดแผน (อัตโนมัติจากลำดับแผน)</label>
-      <div class="readonly" id="f-detail-preview">—</div>
+      <label>รายละเอียดแผน (เติมอัตโนมัติถ้าเลือกลำดับที่มีอยู่ — พิมพ์เองได้ถ้าเป็นลำดับใหม่)</label>
+      <input type="text" id="f-detail-preview" placeholder="พิมพ์รายละเอียดของลำดับแผนนี้">
     </div>
     <div class="field"><label>งาน</label><input type="text" id="f-task" placeholder="เช่น ตอกเข็ม, วางท่อระบายน้ำ"></div>
     <div class="field"><label>ชื่อผู้แก้ไข (จะบันทึกไว้ในคอลัมน์ F)</label><input type="text" id="f-editor" placeholder="พิมพ์ชื่อของคุณ"></div>
@@ -176,14 +178,10 @@ body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);}
 <!-- คลังรูปภาพหน้างาน แยกตามหมวดงาน -->
 <div class="overlay" id="galleryOverlay">
   <div class="modal" style="max-width:560px;">
-    <h3>คลังรูปภาพหน้างาน</h3>
+    <h3>แบบก่อสร้าง</h3>
     <div class="field">
-      <label>เลือกหมวดงาน</label>
+      <label>เลือกหมวดงาน (ชื่อโฟลเดอร์ใน Drive ตรงกับหมวดงาน)</label>
       <div class="gallery-cats" id="gallery-cats"></div>
-    </div>
-    <div class="field">
-      <label>เลือกงาน</label>
-      <select id="gallery-task-select" onchange="loadGalleryBrowseImages()"></select>
     </div>
     <div class="gallery" id="gallery-browse"></div>
     <div class="gallery-note" id="gallery-browse-note"></div>
@@ -195,8 +193,26 @@ body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);}
 
 <script>
 // ==================== ตั้งค่า ====================
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxn8Lexo_PWMqwM1Sk7fGCu075arIYtgwX6pw4sFokA5ZvWhXl9Mhu4Is81WAR47boK/exec';
-const SHEET_NAMES = ['อาคารโกดัง','ระบบน้ำ','คอกทราย','ห้องพัก','ออฟฟิศ'];
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz1q3V1hnQa75WjqBv7uNXES7R4acGtd35VTzmZRhMqXDIZJI-2lnhUHfBXjIx7PtI8/exec';
+// แก้บั๊กสำคัญ: ห้ามใช้ .toISOString() กับวันที่ local เพราะมันแปลงเป็น UTC ก่อน
+// ซึ่งในโซนเวลาไทย (UTC+7) จะทำให้วันที่เพี้ยนถอยหลังไป 1 วันเสมอ (เช่น 20/7/2569 กลายเป็น 19/7/2569)
+// ทำให้งานที่ควรขึ้นวันที่ 20 ไปโผล่วันที่ 21 แทน หรือดูเหมือนหายไปจากวันที่ควรจะเป็น
+function toLocalISO(d){
+  const y = d.getFullYear();
+  const m = String(d.getMonth()+1).padStart(2,'0');
+  const day = String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${day}`;
+}
+
+const DEFAULT_SHEET_NAMES = ['อาคารโกดัง','ระบบน้ำ','คอกทราย','ห้องพัก','ออฟฟิศ'];
+// รายชื่อหมวดงานแบบไดนามิก: รวมหมวดเริ่มต้น + หมวดใหม่ที่ถูกพิมพ์เพิ่มเข้ามาและมีอยู่จริงใน STORE แล้ว
+function currentSheetNames(){
+  if (!STORE) return DEFAULT_SHEET_NAMES;
+  const fromStore = Object.keys(STORE);
+  const ordered = DEFAULT_SHEET_NAMES.filter(s=>fromStore.includes(s));
+  const extra = fromStore.filter(s=>!DEFAULT_SHEET_NAMES.includes(s));
+  return [...ordered, ...extra];
+}
 
 // ข้อมูลสำรอง (จากไฟล์ต้นฉบับ) ใช้แสดงผลตัวอย่างก่อนที่จะตั้งค่า APPS_SCRIPT_URL จริง
 const FALLBACK_DATA = {
@@ -226,13 +242,13 @@ const FALLBACK_DATA = {
     'ห้องพัก': { rows: [], lookup: [] },
     'ออฟฟิศ': { rows: [], lookup: [] }
   },
-  today: new Date().toISOString().slice(0,10)
+  today: toLocalISO(new Date())
 };
 
 // ==================== สถานะแอป ====================
 let STORE = null;
 let TODAY = null;
-let activeSheets = new Set(SHEET_NAMES); // ทุกหมวดงานแสดงพร้อมกันโดยไม่ต้องเลือก (คลิกเพื่อซ่อน/แสดงได้)
+let activeSheets = new Set(DEFAULT_SHEET_NAMES); // ทุกหมวดงานแสดงพร้อมกันโดยไม่ต้องเลือก (คลิกเพื่อซ่อน/แสดงได้)
 let currentGallerySheet = null; // หมวดงานที่เลือกอยู่ในคลังรูปภาพ
 let viewYear, viewMonth; // ค.ศ. (Gregorian) ภายใน, แสดงผลเป็น พ.ศ.
 let editing = null; // {sheet, rowIndex} หรือ null = งานใหม่
@@ -258,6 +274,8 @@ async function loadData(){
   }
   const t = new Date(TODAY);
   viewYear = t.getFullYear(); viewMonth = t.getMonth();
+  // หมวดงานใหม่ (แท็บใหม่ที่เพิ่งถูกสร้าง) ให้แสดงในปฏิทินโดยอัตโนมัติด้วย
+  currentSheetNames().forEach(s=>activeSheets.add(s));
   renderTabs(); renderCalendar();
 }
 
@@ -265,7 +283,7 @@ function showBanner(msg){ const b=document.getElementById('banner'); b.textConte
 function hideBanner(){ document.getElementById('banner').classList.remove('show'); }
 
 function renderTabs(){
-  document.getElementById('tabs').innerHTML = '<span class="hint">แสดงงานประเภท:</span>' + SHEET_NAMES.map(s =>
+  document.getElementById('tabs').innerHTML = '<span class="hint">แสดงงานประเภท:</span>' + currentSheetNames().map(s =>
     `<div class="filter-chip ${activeSheets.has(s)?'active':''}" onclick="toggleSheetFilter('${s}')">${s}</div>`).join('');
 }
 function toggleSheetFilter(s){
@@ -300,7 +318,7 @@ function renderCalendar(){
 
   // รวมงานจากทุกหมวด (ชีต) ที่ถูกเลือกให้แสดง เข้าด้วยกัน ไม่ต้องกดเลือกทีละหมวด
   let rows = [];
-  SHEET_NAMES.forEach(sheetName=>{
+  currentSheetNames().forEach(sheetName=>{
     if (!activeSheets.has(sheetName)) return;
     const sheetRows = (STORE[sheetName] && STORE[sheetName].rows) || [];
     sheetRows.forEach(r=> rows.push(Object.assign({}, r, {__sheet: sheetName})));
@@ -320,7 +338,7 @@ function renderCalendar(){
     else if (dayNum > daysInMonth){ cellDate = new Date(viewYear, viewMonth+1, dayNum-daysInMonth); out=true; }
     else { cellDate = new Date(viewYear, viewMonth, dayNum); }
 
-    const iso = cellDate.toISOString().slice(0,10);
+    const iso = toLocalISO(cellDate);
     const isToday = iso === TODAY;
     const dayTasks = rows.filter(r=>{
       if (!r.start) return false;
@@ -345,21 +363,27 @@ function renderCalendar(){
 
 function populateOrderSelect(sheet, currentOrder){
   const lookup = (STORE[sheet] && STORE[sheet].lookup) || [];
-  const sel = document.getElementById('f-order');
-  sel.innerHTML = '<option value="">— เลือกลำดับแผน —</option>' +
-    lookup.map(l=>`<option value="${l.order}" ${String(l.order)===String(currentOrder)?'selected':''}>${l.order} — ${l.detail}</option>`).join('');
+  document.getElementById('order-list').innerHTML =
+    lookup.map(l=>`<option value="${l.order}">${l.order} — ${l.detail}</option>`).join('');
+  document.getElementById('f-order').value = currentOrder || '';
 }
 function updateDetailPreview(){
   const sheet = document.getElementById('f-sheet').value;
   const lookup = (STORE[sheet] && STORE[sheet].lookup) || [];
   const val = document.getElementById('f-order').value;
   const found = lookup.find(l=>String(l.order)===String(val));
-  document.getElementById('f-detail-preview').textContent = found ? found.detail : '—';
+  // เติมอัตโนมัติเฉพาะตอนพบลำดับแผนที่มีอยู่แล้ว ถ้าเป็นลำดับใหม่จะไม่ไปทับข้อความที่ผู้ใช้พิมพ์เอง
+  if (found) document.getElementById('f-detail-preview').value = found.detail;
 }
 function onSheetChange(){
   const sheet = document.getElementById('f-sheet').value;
   populateOrderSelect(sheet, '');
-  updateDetailPreview();
+  document.getElementById('f-detail-preview').value = '';
+}
+
+function refreshSheetList(currentSheet){
+  document.getElementById('sheet-list').innerHTML =
+    currentSheetNames().map(s=>`<option value="${s}">`).join('');
 }
 
 async function openModal(ref){
@@ -373,10 +397,11 @@ async function openModal(ref){
   if (ref){
     row = (STORE[ref.sheet].rows || []).find(r=>r.rowIndex===ref.rowIndex);
   }
-  const modalSheet = ref ? ref.sheet : (SHEET_NAMES.find(s=>activeSheets.has(s)) || SHEET_NAMES[0]);
-  const sheetSel = document.getElementById('f-sheet');
-  sheetSel.innerHTML = SHEET_NAMES.map(s=>`<option value="${s}" ${s===modalSheet?'selected':''}>${s}</option>`).join('');
-  sheetSel.disabled = !!ref; // แก้ไขงานเดิม ห้ามย้ายหมวดงาน, เพิ่มงานใหม่เลือกหมวดได้
+  const modalSheet = ref ? ref.sheet : (currentSheetNames().find(s=>activeSheets.has(s)) || currentSheetNames()[0]);
+  refreshSheetList();
+  const sheetInput = document.getElementById('f-sheet');
+  sheetInput.value = modalSheet;
+  sheetInput.readOnly = !!ref; // แก้ไขงานเดิม ห้ามย้ายหมวดงาน, เพิ่มงานใหม่พิมพ์หมวดใหม่ได้
 
   document.getElementById('modal-title').textContent = row ? 'แก้ไขงาน — ' + modalSheet : 'เพิ่มงานใหม่';
   populateOrderSelect(modalSheet, row ? row.planOrder : '');
@@ -384,7 +409,8 @@ async function openModal(ref){
   document.getElementById('f-end').value = row ? row.end : '';
   document.getElementById('f-task').value = row ? row.task : '';
   document.getElementById('f-editor').value = '';
-  updateDetailPreview();
+  document.getElementById('f-detail-preview').value = row ? (row.planDetail || '') : '';
+  if (!row) updateDetailPreview();
 
   if (row){
     const st = taskStatus(row);
@@ -440,55 +466,46 @@ async function loadImages(taskName){
   renderGalleryInto('gallery', 'gallery-note', taskName, json);
 }
 
-// ==================== คลังรูปภาพหน้างาน (ปุ่ม "ดูรูปภาพหน้างาน") ====================
+// ==================== แบบก่อสร้าง (ปุ่ม "ดูแบบก่อสร้าง") ====================
+// โฟลเดอร์ใน Drive ตั้งชื่อตรงกับหมวดงาน (ชื่อชีต) เลย เช่น "อาคารโกดัง", "ระบบน้ำ"
 function openGallery(){
-  document.getElementById('gallery-cats').innerHTML = SHEET_NAMES.map(s=>
+  document.getElementById('gallery-cats').innerHTML = currentSheetNames().map(s=>
     `<div class="filter-chip" id="gcat-${s}" onclick="selectGalleryCategory('${s}')">${s}</div>`).join('');
-  const firstWithTasks = SHEET_NAMES.find(s => (STORE[s] && STORE[s].rows && STORE[s].rows.length));
-  selectGalleryCategory(firstWithTasks || SHEET_NAMES[0]);
+  selectGalleryCategory(currentSheetNames()[0]);
   document.getElementById('galleryOverlay').classList.add('show');
 }
 function closeGallery(){ document.getElementById('galleryOverlay').classList.remove('show'); }
 
-function selectGalleryCategory(sheet){
+async function selectGalleryCategory(sheet){
   currentGallerySheet = sheet;
-  SHEET_NAMES.forEach(s=>{
+  currentSheetNames().forEach(s=>{
     const el = document.getElementById('gcat-'+s);
     if (el) el.classList.toggle('active', s===sheet);
   });
-  const rows = (STORE[sheet] && STORE[sheet].rows) || [];
-  const uniqueTasks = [...new Set(rows.map(r=>r.task).filter(Boolean))];
-  const sel = document.getElementById('gallery-task-select');
-  sel.innerHTML = uniqueTasks.length
-    ? uniqueTasks.map(t=>`<option value="${t}">${t}</option>`).join('')
-    : '<option value="">— ไม่มีงานในหมวดนี้ —</option>';
-  loadGalleryBrowseImages();
-}
-
-async function loadGalleryBrowseImages(){
-  const taskName = document.getElementById('gallery-task-select').value;
-  if (!taskName){
-    document.getElementById('gallery-browse').innerHTML = '';
-    document.getElementById('gallery-browse-note').textContent = 'เลือกหมวดงานที่มีรายการงานก่อน';
-    return;
-  }
-  document.getElementById('gallery-browse-note').textContent = 'กำลังโหลดรูป...';
-  const json = await fetchImagesFor(taskName);
-  renderGalleryInto('gallery-browse', 'gallery-browse-note', taskName, json);
+  document.getElementById('gallery-browse-note').textContent = 'กำลังโหลดแบบก่อสร้าง...';
+  const json = await fetchImagesFor(sheet);
+  renderGalleryInto('gallery-browse', 'gallery-browse-note', sheet, json);
 }
 
 async function saveTask(){
   const editorName = document.getElementById('f-editor').value.trim();
   if (!editorName){ alert('กรุณาพิมพ์ชื่อผู้แก้ไขก่อนบันทึก'); return; }
-  const sheet = document.getElementById('f-sheet').value;
+  const sheet = document.getElementById('f-sheet').value.trim();
+  if (!sheet){ alert('กรุณาเลือกหรือพิมพ์ชื่อหมวดงานก่อนบันทึก'); return; }
+  const planOrder = document.getElementById('f-order').value.trim();
+  const planDetail = document.getElementById('f-detail-preview').value.trim();
+  if (planOrder && !planDetail){ alert('กรุณากรอกรายละเอียดแผนของลำดับแผนนี้ด้วย'); return; }
   const isNew = !editing;
+  const isNewSheet = !currentSheetNames().includes(sheet);
   const payload = {
     action: editing ? 'updateRow' : 'addRow',
     sheet: sheet,
+    isNewSheet: isNewSheet, // true = หมวดงานนี้ยังไม่มีอยู่ ให้ Apps Script สร้างแท็บใหม่ในชีต
     rowIndex: editing ? editing.rowIndex : undefined,
     start: document.getElementById('f-start').value,
     end: document.getElementById('f-end').value,
-    planOrder: document.getElementById('f-order').value,
+    planOrder: planOrder,
+    planDetail: planDetail,
     task: document.getElementById('f-task').value,
     editorName: editorName
   };
@@ -516,12 +533,10 @@ function fmtThaiDate(iso){
 function showSuccessModal(isNew, payload){
   closeModal();
   document.getElementById('success-title').textContent = isNew ? 'เพิ่มงานใหม่สำเร็จ ✅' : 'แก้ไขงานสำเร็จ ✅';
-  const lookup = (STORE[payload.sheet] && STORE[payload.sheet].lookup) || [];
-  const planInfo = lookup.find(l=>String(l.order)===String(payload.planOrder));
   document.getElementById('success-content').innerHTML = `
-    <div><b>หมวดงาน:</b> ${payload.sheet}</div>
+    <div><b>หมวดงาน:</b> ${payload.sheet}${payload.isNewSheet ? ' (สร้างแท็บใหม่)' : ''}</div>
     <div><b>งาน:</b> ${payload.task || '(ไม่มีชื่องาน)'}</div>
-    <div><b>ลำดับแผน:</b> ${payload.planOrder || '—'} ${planInfo? '— '+planInfo.detail : ''}</div>
+    <div><b>ลำดับแผน:</b> ${payload.planOrder || '—'} ${payload.planDetail ? '— '+payload.planDetail : ''}</div>
     <div><b>วันที่เริ่ม:</b> ${fmtThaiDate(payload.start)}</div>
     <div><b>วันที่สิ้นสุด:</b> ${payload.end ? fmtThaiDate(payload.end) : 'ยังไม่กำหนด (กำลังดำเนินการ)'}</div>
     <div><b>ผู้บันทึก:</b> ${payload.editorName}</div>
