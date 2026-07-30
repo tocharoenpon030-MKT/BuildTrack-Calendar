@@ -22,9 +22,21 @@ body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);}
 #banner{background:var(--rust);color:#fff;padding:8px 26px;font-size:13px;display:none;}
 #banner.show{display:block;}
 
-.tabs{display:flex;gap:4px;padding:14px 26px 0;flex-wrap:wrap;}
-.tab{padding:9px 16px;border-radius:6px 6px 0 0;background:var(--paper-card);border:1px solid var(--grid-line);border-bottom:none;cursor:pointer;font-size:14px;color:var(--ink-soft);}
-.tab.active{background:var(--paper-card);color:var(--ink);font-weight:600;border-bottom:3px solid var(--safety);}
+.tabs{display:flex;gap:8px;padding:14px 26px 0;flex-wrap:wrap;align-items:center;}
+.tabs .hint{font-size:12px;color:var(--ink-soft);margin-right:4px;}
+.filter-chip{padding:7px 14px;border-radius:16px;background:var(--paper-card);border:1.5px solid var(--grid-line);cursor:pointer;font-size:13px;color:var(--ink-soft);user-select:none;transition:.15s;}
+.filter-chip.active{background:var(--navy);color:#fff;border-color:var(--navy);font-weight:600;}
+.filter-chip:hover{opacity:.85;}
+.chip-sheet-tag{font-weight:700;opacity:.75;margin-right:3px;}
+
+.btn-row{display:flex;gap:8px;flex-wrap:wrap;}
+.icon-btn{background:var(--paper-card);color:var(--ink);border:1.5px solid var(--ink);padding:10px 16px;border-radius:6px;cursor:pointer;font-size:13.5px;}
+.icon-btn:hover{background:var(--safety);}
+
+.gallery-cats{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;}
+.success-modal-body{background:#F6F4EC;border:1px solid var(--grid-line);border-radius:8px;padding:14px;margin:10px 0;font-size:13.5px;line-height:1.9;}
+.success-modal-body b{color:var(--navy);}
+.success-check{width:44px;height:44px;border-radius:50%;background:var(--signal-bg);border:2px solid var(--signal);color:var(--signal);display:flex;align-items:center;justify-content:center;font-size:24px;margin:0 auto 10px;}
 
 .controls{max-width:1200px;margin:0 auto;padding:16px 26px 0;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;}
 .month-switch{display:flex;align-items:center;gap:14px;}
@@ -84,7 +96,9 @@ body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);}
 </div>
 <div id="banner"></div>
 
-<div class="tabs" id="tabs"></div>
+<div class="tabs" id="tabs">
+  <span class="hint">แสดงงานประเภท:</span>
+</div>
 
 <div class="controls">
   <div class="month-switch">
@@ -97,7 +111,10 @@ body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);}
     <span><i style="background:var(--yellow-bg);border:1px solid var(--yellow-line)"></i>กำลังดำเนินการ</span>
     <span><i style="background:var(--signal-bg);border:1px solid var(--signal)"></i>เสร็จแล้ว</span>
   </div>
-  <button class="add-btn" onclick="openModal(null)">+ เพิ่มงานใหม่</button>
+  <div class="btn-row">
+    <button class="icon-btn" onclick="openGallery()">🖼️ ดูรูปภาพหน้างาน</button>
+    <button class="add-btn" onclick="openModal(null)">+ เพิ่มงานใหม่</button>
+  </div>
 </div>
 
 <div class="cal-wrap">
@@ -111,6 +128,10 @@ body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);}
   <div class="modal">
     <h3 id="modal-title">รายละเอียดงาน</h3>
     <div id="modal-status"></div>
+    <div class="field">
+      <label>หมวดงาน (ชีต)</label>
+      <select id="f-sheet" onchange="onSheetChange()"></select>
+    </div>
     <div class="two-col">
       <div class="field"><label>วันที่เริ่ม</label><input type="date" id="f-start"></div>
       <div class="field"><label>วันที่สิ้นสุด</label><input type="date" id="f-end"></div>
@@ -136,6 +157,38 @@ body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);}
     <div class="modal-actions">
       <button class="btn cancel" onclick="closeModal()">ยกเลิก</button>
       <button class="btn save" onclick="saveTask()">บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- ป็อปอัพสรุปหลังบันทึกสำเร็จ (ไว้แคปหน้าจอส่งต่อได้) -->
+<div class="overlay" id="successOverlay">
+  <div class="modal" style="max-width:420px;text-align:center;">
+    <div class="success-check">✓</div>
+    <h3 id="success-title" style="text-align:center;">บันทึกสำเร็จ</h3>
+    <div class="success-modal-body" id="success-content" style="text-align:left;"></div>
+    <div class="modal-actions" style="justify-content:center;">
+      <button class="btn save" onclick="closeSuccessModal()">ตกลง</button>
+    </div>
+  </div>
+</div>
+
+<!-- คลังรูปภาพหน้างาน แยกตามหมวดงาน -->
+<div class="overlay" id="galleryOverlay">
+  <div class="modal" style="max-width:560px;">
+    <h3>คลังรูปภาพหน้างาน</h3>
+    <div class="field">
+      <label>เลือกหมวดงาน</label>
+      <div class="gallery-cats" id="gallery-cats"></div>
+    </div>
+    <div class="field">
+      <label>เลือกงาน</label>
+      <select id="gallery-task-select" onchange="loadGalleryBrowseImages()"></select>
+    </div>
+    <div class="gallery" id="gallery-browse"></div>
+    <div class="gallery-note" id="gallery-browse-note"></div>
+    <div class="modal-actions">
+      <button class="btn cancel" onclick="closeGallery()">ปิด</button>
     </div>
   </div>
 </div>
@@ -179,7 +232,8 @@ const FALLBACK_DATA = {
 // ==================== สถานะแอป ====================
 let STORE = null;
 let TODAY = null;
-let activeSheet = SHEET_NAMES[0];
+let activeSheets = new Set(SHEET_NAMES); // ทุกหมวดงานแสดงพร้อมกันโดยไม่ต้องเลือก (คลิกเพื่อซ่อน/แสดงได้)
+let currentGallerySheet = null; // หมวดงานที่เลือกอยู่ในคลังรูปภาพ
 let viewYear, viewMonth; // ค.ศ. (Gregorian) ภายใน, แสดงผลเป็น พ.ศ.
 let editing = null; // {sheet, rowIndex} หรือ null = งานใหม่
 
@@ -211,17 +265,21 @@ function showBanner(msg){ const b=document.getElementById('banner'); b.textConte
 function hideBanner(){ document.getElementById('banner').classList.remove('show'); }
 
 function renderTabs(){
-  document.getElementById('tabs').innerHTML = SHEET_NAMES.map(s =>
-    `<div class="tab ${s===activeSheet?'active':''}" onclick="switchTab('${s}')">${s}</div>`).join('');
+  document.getElementById('tabs').innerHTML = '<span class="hint">แสดงงานประเภท:</span>' + SHEET_NAMES.map(s =>
+    `<div class="filter-chip ${activeSheets.has(s)?'active':''}" onclick="toggleSheetFilter('${s}')">${s}</div>`).join('');
 }
-function switchTab(s){ activeSheet = s; renderTabs(); renderCalendar(); }
+function toggleSheetFilter(s){
+  if (activeSheets.has(s)) activeSheets.delete(s); else activeSheets.add(s);
+  renderTabs(); renderCalendar();
+}
 
 function taskStatus(row){
   if (!row.start) return 'not-started';
   const today = new Date(TODAY);
   const start = new Date(row.start);
-  const end = row.end ? new Date(row.end) : start;
   if (today < start) return 'not-started';
+  if (!row.end) return 'in-progress'; // ยังไม่มีวันที่จบ = ถือว่ากำลังดำเนินการอยู่ (ไม่ควรกลายเป็นเสร็จแล้วทันที)
+  const end = new Date(row.end);
   if (today <= end) return 'in-progress';
   return 'done';
 }
@@ -240,7 +298,14 @@ function renderCalendar(){
   document.getElementById('month-title').textContent = THAI_MONTHS[viewMonth] + ' ' + (viewYear+543);
   document.getElementById('cal-head').innerHTML = THAI_DAYS.map(d=>`<div>${d}</div>`).join('');
 
-  const rows = (STORE[activeSheet] && STORE[activeSheet].rows) || [];
+  // รวมงานจากทุกหมวด (ชีต) ที่ถูกเลือกให้แสดง เข้าด้วยกัน ไม่ต้องกดเลือกทีละหมวด
+  let rows = [];
+  SHEET_NAMES.forEach(sheetName=>{
+    if (!activeSheets.has(sheetName)) return;
+    const sheetRows = (STORE[sheetName] && STORE[sheetName].rows) || [];
+    sheetRows.forEach(r=> rows.push(Object.assign({}, r, {__sheet: sheetName})));
+  });
+
   const firstDay = new Date(viewYear, viewMonth, 1);
   const startOffset = firstDay.getDay();
   const daysInMonth = new Date(viewYear, viewMonth+1, 0).getDate();
@@ -262,12 +327,16 @@ function renderCalendar(){
       const s = r.start, e = r.end || r.start;
       return iso >= s && iso <= e;
     });
-    const shown = dayTasks.slice(0,3);
+    const shown = dayTasks.slice(0,4);
     const extra = dayTasks.length - shown.length;
 
     html += `<div class="day ${out?'out':''} ${isToday?'today':''}">
       <div class="num">${cellDate.getDate()}</div>
-      ${shown.map(r=>`<div class="chip ${taskStatus(r)}" onclick="openModal({sheet:'${activeSheet}',rowIndex:${r.rowIndex}})" title="${r.task}">${r.task || '(ไม่มีชื่องาน)'}</div>`).join('')}
+      ${shown.map(r=>{
+        const label = (r.task || '(ไม่มีชื่องาน)');
+        const tooltip = `${r.__sheet} | ${label}${r.planDetail?' - '+r.planDetail:''}`;
+        return `<div class="chip ${taskStatus(r)}" onclick="openModal({sheet:'${r.__sheet}',rowIndex:${r.rowIndex}})" title="${tooltip}"><span class="chip-sheet-tag">${r.__sheet}</span>${label}</div>`;
+      }).join('')}
       ${extra>0?`<div class="more">+${extra} งานอื่น</div>`:''}
     </div>`;
   }
@@ -281,11 +350,16 @@ function populateOrderSelect(sheet, currentOrder){
     lookup.map(l=>`<option value="${l.order}" ${String(l.order)===String(currentOrder)?'selected':''}>${l.order} — ${l.detail}</option>`).join('');
 }
 function updateDetailPreview(){
-  const sheet = activeSheet;
+  const sheet = document.getElementById('f-sheet').value;
   const lookup = (STORE[sheet] && STORE[sheet].lookup) || [];
   const val = document.getElementById('f-order').value;
   const found = lookup.find(l=>String(l.order)===String(val));
   document.getElementById('f-detail-preview').textContent = found ? found.detail : '—';
+}
+function onSheetChange(){
+  const sheet = document.getElementById('f-sheet').value;
+  populateOrderSelect(sheet, '');
+  updateDetailPreview();
 }
 
 async function openModal(ref){
@@ -299,8 +373,13 @@ async function openModal(ref){
   if (ref){
     row = (STORE[ref.sheet].rows || []).find(r=>r.rowIndex===ref.rowIndex);
   }
-  document.getElementById('modal-title').textContent = row ? 'แก้ไขงาน — ' + activeSheet : 'เพิ่มงานใหม่ — ' + activeSheet;
-  populateOrderSelect(activeSheet, row ? row.planOrder : '');
+  const modalSheet = ref ? ref.sheet : (SHEET_NAMES.find(s=>activeSheets.has(s)) || SHEET_NAMES[0]);
+  const sheetSel = document.getElementById('f-sheet');
+  sheetSel.innerHTML = SHEET_NAMES.map(s=>`<option value="${s}" ${s===modalSheet?'selected':''}>${s}</option>`).join('');
+  sheetSel.disabled = !!ref; // แก้ไขงานเดิม ห้ามย้ายหมวดงาน, เพิ่มงานใหม่เลือกหมวดได้
+
+  document.getElementById('modal-title').textContent = row ? 'แก้ไขงาน — ' + modalSheet : 'เพิ่มงานใหม่';
+  populateOrderSelect(modalSheet, row ? row.planOrder : '');
   document.getElementById('f-start').value = row ? row.start : '';
   document.getElementById('f-end').value = row ? row.end : '';
   document.getElementById('f-task').value = row ? row.task : '';
@@ -323,32 +402,89 @@ async function openModal(ref){
 }
 function closeModal(){ document.getElementById('overlay').classList.remove('show'); }
 
-async function loadImages(taskName){
+async function fetchImagesFor(taskName){
   if (APPS_SCRIPT_URL === 'PASTE_YOUR_WEB_APP_URL_HERE'){
-    document.getElementById('gallery-note').textContent = 'ต้องตั้งค่า APPS_SCRIPT_URL ก่อนถึงจะดึงรูปจาก Drive ได้';
-    return;
+    return {ok:false, reason:'no-url'};
   }
   try{
     const res = await fetch(APPS_SCRIPT_URL + '?action=getImages&folder=' + encodeURIComponent(taskName));
     const json = await res.json();
-    if (json.ok && json.images.length){
-      document.getElementById('gallery').innerHTML = json.images.map(im=>`<img src="${im.url}" alt="${im.name}">`).join('');
-      document.getElementById('gallery-note').textContent = json.images.length + ' รูป';
-    } else {
-      document.getElementById('gallery').innerHTML = '';
-      document.getElementById('gallery-note').textContent = 'ไม่พบโฟลเดอร์รูปชื่อ "' + taskName + '" ใน Drive';
-    }
+    return json;
   }catch(err){
-    document.getElementById('gallery-note').textContent = 'โหลดรูปไม่สำเร็จ: ' + err.message;
+    return {ok:false, reason:'error', error: err.message};
   }
+}
+
+function renderGalleryInto(galleryId, noteId, taskName, json){
+  const galEl = document.getElementById(galleryId);
+  const noteEl = document.getElementById(noteId);
+  if (json.reason === 'no-url'){
+    galEl.innerHTML = '';
+    noteEl.textContent = 'ต้องตั้งค่า APPS_SCRIPT_URL ก่อนถึงจะดึงรูปจาก Drive ได้';
+    return;
+  }
+  if (json.ok && json.images && json.images.length){
+    galEl.innerHTML = json.images.map(im=>`<img src="${im.url}" alt="${im.name}" title="คลิกเพื่อดูรูปขนาดเต็ม" onclick="window.open('${im.url}','_blank')">`).join('');
+    noteEl.textContent = json.images.length + ' รูป (คลิกรูปเพื่อดูขนาดเต็ม/บันทึกรูป)';
+  } else {
+    galEl.innerHTML = '';
+    noteEl.textContent = json.ok
+      ? ('ยังไม่พบรูปในโฟลเดอร์ "' + taskName + '" ใน Drive')
+      : ('โหลดรูปไม่สำเร็จ: ' + (json.error || 'ไม่ทราบสาเหตุ'));
+  }
+}
+
+async function loadImages(taskName){
+  document.getElementById('gallery-note').textContent = 'กำลังโหลดรูป...';
+  const json = await fetchImagesFor(taskName);
+  renderGalleryInto('gallery', 'gallery-note', taskName, json);
+}
+
+// ==================== คลังรูปภาพหน้างาน (ปุ่ม "ดูรูปภาพหน้างาน") ====================
+function openGallery(){
+  document.getElementById('gallery-cats').innerHTML = SHEET_NAMES.map(s=>
+    `<div class="filter-chip" id="gcat-${s}" onclick="selectGalleryCategory('${s}')">${s}</div>`).join('');
+  const firstWithTasks = SHEET_NAMES.find(s => (STORE[s] && STORE[s].rows && STORE[s].rows.length));
+  selectGalleryCategory(firstWithTasks || SHEET_NAMES[0]);
+  document.getElementById('galleryOverlay').classList.add('show');
+}
+function closeGallery(){ document.getElementById('galleryOverlay').classList.remove('show'); }
+
+function selectGalleryCategory(sheet){
+  currentGallerySheet = sheet;
+  SHEET_NAMES.forEach(s=>{
+    const el = document.getElementById('gcat-'+s);
+    if (el) el.classList.toggle('active', s===sheet);
+  });
+  const rows = (STORE[sheet] && STORE[sheet].rows) || [];
+  const uniqueTasks = [...new Set(rows.map(r=>r.task).filter(Boolean))];
+  const sel = document.getElementById('gallery-task-select');
+  sel.innerHTML = uniqueTasks.length
+    ? uniqueTasks.map(t=>`<option value="${t}">${t}</option>`).join('')
+    : '<option value="">— ไม่มีงานในหมวดนี้ —</option>';
+  loadGalleryBrowseImages();
+}
+
+async function loadGalleryBrowseImages(){
+  const taskName = document.getElementById('gallery-task-select').value;
+  if (!taskName){
+    document.getElementById('gallery-browse').innerHTML = '';
+    document.getElementById('gallery-browse-note').textContent = 'เลือกหมวดงานที่มีรายการงานก่อน';
+    return;
+  }
+  document.getElementById('gallery-browse-note').textContent = 'กำลังโหลดรูป...';
+  const json = await fetchImagesFor(taskName);
+  renderGalleryInto('gallery-browse', 'gallery-browse-note', taskName, json);
 }
 
 async function saveTask(){
   const editorName = document.getElementById('f-editor').value.trim();
   if (!editorName){ alert('กรุณาพิมพ์ชื่อผู้แก้ไขก่อนบันทึก'); return; }
+  const sheet = document.getElementById('f-sheet').value;
+  const isNew = !editing;
   const payload = {
     action: editing ? 'updateRow' : 'addRow',
-    sheet: activeSheet,
+    sheet: sheet,
     rowIndex: editing ? editing.rowIndex : undefined,
     start: document.getElementById('f-start').value,
     end: document.getElementById('f-end').value,
@@ -364,11 +500,36 @@ async function saveTask(){
     const res = await fetch(APPS_SCRIPT_URL, { method:'POST', body: JSON.stringify(payload) });
     const json = await res.json();
     if (!json.ok) throw new Error(json.error || 'บันทึกไม่สำเร็จ');
-    closeModal();
     await loadData();
+    showSuccessModal(isNew, payload);
   }catch(err){
     alert('บันทึกไม่สำเร็จ: ' + err.message);
   }
+}
+
+function fmtThaiDate(iso){
+  if (!iso) return '—';
+  const d = new Date(iso);
+  return d.getDate() + ' ' + THAI_MONTHS[d.getMonth()] + ' ' + (d.getFullYear()+543);
+}
+
+function showSuccessModal(isNew, payload){
+  closeModal();
+  document.getElementById('success-title').textContent = isNew ? 'เพิ่มงานใหม่สำเร็จ ✅' : 'แก้ไขงานสำเร็จ ✅';
+  const lookup = (STORE[payload.sheet] && STORE[payload.sheet].lookup) || [];
+  const planInfo = lookup.find(l=>String(l.order)===String(payload.planOrder));
+  document.getElementById('success-content').innerHTML = `
+    <div><b>หมวดงาน:</b> ${payload.sheet}</div>
+    <div><b>งาน:</b> ${payload.task || '(ไม่มีชื่องาน)'}</div>
+    <div><b>ลำดับแผน:</b> ${payload.planOrder || '—'} ${planInfo? '— '+planInfo.detail : ''}</div>
+    <div><b>วันที่เริ่ม:</b> ${fmtThaiDate(payload.start)}</div>
+    <div><b>วันที่สิ้นสุด:</b> ${payload.end ? fmtThaiDate(payload.end) : 'ยังไม่กำหนด (กำลังดำเนินการ)'}</div>
+    <div><b>ผู้บันทึก:</b> ${payload.editorName}</div>
+  `;
+  document.getElementById('successOverlay').classList.add('show');
+}
+function closeSuccessModal(){
+  document.getElementById('successOverlay').classList.remove('show');
 }
 
 loadData();
