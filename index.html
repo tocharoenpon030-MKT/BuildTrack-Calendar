@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ปฏิทินงานก่อสร้างพัทยา 2569</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800&family=IBM+Plex+Sans+Thai:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#E4E0D1; --paper-card:#F3EFE4; --ink:#20242A; --ink-soft:#585A52;
+  --grid-line:#C9C2AD; --navy:#1D3346; --navy-line:rgba(255,255,255,.14); --paper-on-navy:#D7E0E6;
+  --safety:#F0B429; --signal:#2F6F4E; --signal-bg:#CFE3D3; --rust:#A6431E; --rust-bg:#F3D6CC;
+  --yellow-bg:#FCE8B2; --yellow-line:#C98A12;
+  --display:'Big Shoulders Display',sans-serif; --body:'IBM Plex Sans Thai',sans-serif; --mono:'IBM Plex Mono',monospace;
+}
+*{box-sizing:border-box;}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);}
+.topbar{background:var(--navy);color:#fff;padding:16px 26px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;}
+.brand{font-family:var(--display);font-weight:800;font-size:22px;}
+.brand small{display:block;font-family:var(--mono);font-size:11px;font-weight:400;color:var(--safety);letter-spacing:1px;text-transform:uppercase;}
+#banner{background:var(--rust);color:#fff;padding:8px 26px;font-size:13px;display:none;}
+#banner.show{display:block;}
+
+.tabs{display:flex;gap:4px;padding:14px 26px 0;flex-wrap:wrap;}
+.tab{padding:9px 16px;border-radius:6px 6px 0 0;background:var(--paper-card);border:1px solid var(--grid-line);border-bottom:none;cursor:pointer;font-size:14px;color:var(--ink-soft);}
+.tab.active{background:var(--paper-card);color:var(--ink);font-weight:600;border-bottom:3px solid var(--safety);}
+
+.controls{max-width:1200px;margin:0 auto;padding:16px 26px 0;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;}
+.month-switch{display:flex;align-items:center;gap:14px;}
+.month-switch button{width:32px;height:32px;border-radius:50%;border:1.5px solid var(--ink);background:var(--paper-card);cursor:pointer;font-size:16px;}
+.month-switch button:hover{background:var(--safety);}
+.month-title{font-family:var(--display);font-size:26px;font-weight:700;min-width:220px;text-align:center;}
+.legend{display:flex;gap:14px;font-size:12.5px;flex-wrap:wrap;}
+.legend span{display:inline-flex;align-items:center;gap:6px;}
+.legend i{width:14px;height:14px;border-radius:3px;display:inline-block;}
+.add-btn{background:var(--ink);color:#fff;border:none;padding:10px 16px;border-radius:6px;cursor:pointer;font-size:13.5px;}
+.add-btn:hover{opacity:.85;}
+
+.cal-wrap{max-width:1200px;margin:16px auto 40px;padding:0 26px;}
+.cal{background:var(--paper-card);border:1px solid var(--grid-line);border-radius:6px;overflow:hidden;}
+.cal-head{display:grid;grid-template-columns:repeat(7,1fr);background:var(--navy);}
+.cal-head div{padding:8px 0;text-align:center;font-family:var(--mono);font-size:11.5px;color:var(--paper-on-navy);text-transform:uppercase;}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);}
+.day{min-height:108px;border-right:1px solid var(--grid-line);border-bottom:1px solid var(--grid-line);padding:6px;position:relative;}
+.day.out{background:#DAD6C7;}
+.day .num{font-family:var(--mono);font-size:12px;color:var(--ink-soft);}
+.day.today .num{background:var(--ink);color:#fff;border-radius:50%;width:20px;height:20px;display:inline-flex;align-items:center;justify-content:center;}
+.chip{margin-top:4px;padding:2px 6px;border-radius:4px;font-size:11px;line-height:1.3;cursor:pointer;border:1px solid;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.chip.not-started{background:var(--rust-bg);border-color:var(--rust);color:#5b2a1a;}
+.chip.in-progress{background:var(--yellow-bg);border-color:var(--yellow-line);color:#5b3e00;}
+.chip.done{background:var(--signal-bg);border-color:var(--signal);color:#183a28;}
+.more{font-size:10.5px;color:var(--ink-soft);margin-top:2px;cursor:pointer;}
+
+.overlay{position:fixed;inset:0;background:rgba(20,22,20,.5);display:none;align-items:center;justify-content:center;z-index:50;padding:16px;}
+.overlay.show{display:flex;}
+.modal{background:#fff;border-radius:8px;max-width:480px;width:100%;max-height:90vh;overflow:auto;padding:22px;}
+.modal h3{font-family:var(--display);font-size:22px;margin:0 0 14px;}
+.field{margin-bottom:12px;}
+.field label{display:block;font-size:12.5px;color:var(--ink-soft);margin-bottom:4px;}
+.field input, .field select{width:100%;padding:8px 10px;border:1px solid var(--grid-line);border-radius:5px;font-family:var(--body);font-size:14px;}
+.field .readonly{padding:8px 10px;background:#F0EEE5;border-radius:5px;font-size:13.5px;color:var(--ink-soft);}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.modal-actions{display:flex;gap:10px;margin-top:16px;justify-content:flex-end;}
+.btn{padding:9px 16px;border-radius:6px;border:none;cursor:pointer;font-size:13.5px;}
+.btn.save{background:var(--ink);color:#fff;}
+.btn.cancel{background:#EDEBE1;color:var(--ink);}
+.status-badge{display:inline-block;padding:3px 10px;border-radius:12px;font-size:12px;margin-bottom:10px;}
+.gallery{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:6px;}
+.gallery img{width:100%;height:70px;object-fit:cover;border-radius:4px;border:1px solid var(--grid-line);}
+.gallery-note{font-size:12px;color:var(--ink-soft);margin-top:6px;}
+.last-mod{font-family:var(--mono);font-size:11px;color:var(--ink-soft);margin-top:10px;}
+
+@media (max-width:700px){
+  .day{min-height:88px;}
+  .month-title{font-size:20px;min-width:0;}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">SITE//CALENDAR<small>ปฏิทินงานก่อสร้างพัทยา · เชื่อมสด Google Sheets</small></div>
+</div>
+<div id="banner"></div>
+
+<div class="tabs" id="tabs"></div>
+
+<div class="controls">
+  <div class="month-switch">
+    <button onclick="changeMonth(-1)">‹</button>
+    <div class="month-title" id="month-title"></div>
+    <button onclick="changeMonth(1)">›</button>
+  </div>
+  <div class="legend">
+    <span><i style="background:var(--rust-bg);border:1px solid var(--rust)"></i>ยังไม่เริ่ม</span>
+    <span><i style="background:var(--yellow-bg);border:1px solid var(--yellow-line)"></i>กำลังดำเนินการ</span>
+    <span><i style="background:var(--signal-bg);border:1px solid var(--signal)"></i>เสร็จแล้ว</span>
+  </div>
+  <button class="add-btn" onclick="openModal(null)">+ เพิ่มงานใหม่</button>
+</div>
+
+<div class="cal-wrap">
+  <div class="cal">
+    <div class="cal-head" id="cal-head"></div>
+    <div class="cal-grid" id="cal-grid"></div>
+  </div>
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <h3 id="modal-title">รายละเอียดงาน</h3>
+    <div id="modal-status"></div>
+    <div class="two-col">
+      <div class="field"><label>วันที่เริ่ม</label><input type="date" id="f-start"></div>
+      <div class="field"><label>วันที่สิ้นสุด</label><input type="date" id="f-end"></div>
+    </div>
+    <div class="field">
+      <label>ลำดับแผน</label>
+      <select id="f-order" onchange="updateDetailPreview()"></select>
+    </div>
+    <div class="field">
+      <label>รายละเอียดแผน (อัตโนมัติจากลำดับแผน)</label>
+      <div class="readonly" id="f-detail-preview">—</div>
+    </div>
+    <div class="field"><label>งาน</label><input type="text" id="f-task" placeholder="เช่น ตอกเข็ม, วางท่อระบายน้ำ"></div>
+    <div class="field"><label>ชื่อผู้แก้ไข (จะบันทึกไว้ในคอลัมน์ F)</label><input type="text" id="f-editor" placeholder="พิมพ์ชื่อของคุณ"></div>
+
+    <div id="gallery-wrap" style="display:none;">
+      <label style="font-size:12.5px;color:var(--ink-soft);">รูปภาพหน้างานที่เกี่ยวข้อง</label>
+      <div class="gallery" id="gallery"></div>
+      <div class="gallery-note" id="gallery-note"></div>
+    </div>
+    <div class="last-mod" id="last-mod"></div>
+
+    <div class="modal-actions">
+      <button class="btn cancel" onclick="closeModal()">ยกเลิก</button>
+      <button class="btn save" onclick="saveTask()">บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ==================== ตั้งค่า ====================
+const APPS_SCRIPT_URL = 'PASTE_YOUR_WEB_APP_URL_HERE'; // วาง URL จาก Google Apps Script deployment ตรงนี้
+const SHEET_NAMES = ['อาคารโกดัง','ระบบน้ำ','คอกทราย','ห้องพัก','ออฟฟิศ'];
+
+// ข้อมูลสำรอง (จากไฟล์ต้นฉบับ) ใช้แสดงผลตัวอย่างก่อนที่จะตั้งค่า APPS_SCRIPT_URL จริง
+const FALLBACK_DATA = {
+  data: {
+    'อาคารโกดัง': { rows: [
+      {rowIndex:2, start:'2026-07-20', end:'2026-07-20', planOrder:1, planDetail:'ตอกเข็มทำฟุตติ้ง', task:'ตอกเข็ม', lastModified:''},
+      {rowIndex:3, start:'2026-07-21', end:'', planOrder:1, planDetail:'ตอกเข็มทำฟุตติ้ง', task:'ฟุตติ้ง', lastModified:''},
+      {rowIndex:4, start:'2026-07-22', end:'', planOrder:2, planDetail:'ตั้งเสา', task:'ตั้งเสา', lastModified:''},
+      {rowIndex:5, start:'2026-07-29', end:'', planOrder:4, planDetail:'โครงเหล็กหลังคา', task:'โครงหลังคา', lastModified:''},
+      {rowIndex:6, start:'2026-08-08', end:'', planOrder:3, planDetail:'เทพื้น', task:'ไวเมชพื้นเข้า', lastModified:''},
+      {rowIndex:7, start:'2026-08-06', end:'', planOrder:5, planDetail:'มุงหลังคา', task:'เมทัลชีทหลังคาเข้า', lastModified:''}
+    ], lookup:[{order:1,detail:'ตอกเข็มทำฟุตติ้ง'},{order:2,detail:'ตั้งเสา'},{order:3,detail:'เทพื้น'},{order:4,detail:'โครงเหล็กหลังคา'},{order:5,detail:'มุงหลังคา'},{order:6,detail:'โครงเหล็กผนัง'},{order:7,detail:'มุงผนัง'}] },
+    'ระบบน้ำ': { rows: [
+      {rowIndex:2, start:'2026-07-17', end:'2026-07-17', planOrder:1, planDetail:'ขุดดิน', task:'รถแบคโฮเข้าขุดวางท่อระบายน้ำ คสล.+วางผังปักหมุดรอตอกเข็ม', lastModified:''},
+      {rowIndex:3, start:'2026-07-18', end:'', planOrder:2, planDetail:'วางระบบท่อ', task:'วางท่อระบายน้ำ', lastModified:''}
+    ], lookup:[{order:1,detail:'ขุดดิน'},{order:2,detail:'วางระบบท่อ'}] },
+    'คอกทราย': { rows: [
+      {rowIndex:2, start:'2026-07-17', end:'2026-07-17', planOrder:1, planDetail:'วางระบบท่อ', task:'รถแบคโฮเข้าขุดวางท่อระบายน้ำ คสล.+วางผังปักหมุดรอตอกเข็ม', lastModified:''},
+      {rowIndex:3, start:'2026-07-18', end:'', planOrder:1, planDetail:'วางระบบท่อ', task:'วางท่อระบายน้ำ', lastModified:''},
+      {rowIndex:4, start:'2026-07-20', end:'2026-07-20', planOrder:2, planDetail:'ตอกเข็มทำฟุตติ้ง', task:'ตอกเข็ม', lastModified:''},
+      {rowIndex:5, start:'2026-07-21', end:'', planOrder:2, planDetail:'ตอกเข็มทำฟุตติ้ง', task:'ฟุตติ้ง', lastModified:''},
+      {rowIndex:6, start:'2026-07-22', end:'', planOrder:3, planDetail:'ตั้งเสา', task:'ตั้งเสา', lastModified:''},
+      {rowIndex:7, start:'2026-07-29', end:'', planOrder:5, planDetail:'โครงเหล็กหลังคา', task:'โครงหลังคา', lastModified:''},
+      {rowIndex:8, start:'2026-08-05', end:'', planOrder:4, planDetail:'เทพื้น', task:'ไวเมชพื้นเข้า', lastModified:''},
+      {rowIndex:9, start:'2026-08-06', end:'', planOrder:6, planDetail:'มุงหลังคา', task:'เมทัลชีทหลังคาเข้า', lastModified:''}
+    ], lookup:[{order:2,detail:'ฟุตติ้ง'},{order:3,detail:'ทำปลอกคาน'},{order:4,detail:'ตั้งเสา'},{order:5,detail:'ใส่แผ่นพื้น'}] },
+    'ห้องพัก': { rows: [], lookup: [] },
+    'ออฟฟิศ': { rows: [], lookup: [] }
+  },
+  today: new Date().toISOString().slice(0,10)
+};
+
+// ==================== สถานะแอป ====================
+let STORE = null;
+let TODAY = null;
+let activeSheet = SHEET_NAMES[0];
+let viewYear, viewMonth; // ค.ศ. (Gregorian) ภายใน, แสดงผลเป็น พ.ศ.
+let editing = null; // {sheet, rowIndex} หรือ null = งานใหม่
+
+async function loadData(){
+  if (APPS_SCRIPT_URL === 'PASTE_YOUR_WEB_APP_URL_HERE') {
+    showBanner('ยังไม่ได้เชื่อมกับ Google Sheets จริง — กำลังแสดงข้อมูลตัวอย่างจากไฟล์ต้นฉบับ ให้นำ Web App URL จาก Apps Script มาใส่ในตัวแปร APPS_SCRIPT_URL');
+    STORE = FALLBACK_DATA.data;
+    TODAY = FALLBACK_DATA.today;
+  } else {
+    try{
+      const res = await fetch(APPS_SCRIPT_URL);
+      const json = await res.json();
+      if (!json.ok) throw new Error(json.error || 'โหลดข้อมูลไม่สำเร็จ');
+      STORE = json.data;
+      TODAY = json.today;
+      hideBanner();
+    }catch(err){
+      showBanner('เชื่อมต่อ Google Sheets ไม่สำเร็จ (' + err.message + ') — แสดงข้อมูลตัวอย่างแทน');
+      STORE = FALLBACK_DATA.data;
+      TODAY = FALLBACK_DATA.today;
+    }
+  }
+  const t = new Date(TODAY);
+  viewYear = t.getFullYear(); viewMonth = t.getMonth();
+  renderTabs(); renderCalendar();
+}
+
+function showBanner(msg){ const b=document.getElementById('banner'); b.textContent=msg; b.classList.add('show'); }
+function hideBanner(){ document.getElementById('banner').classList.remove('show'); }
+
+function renderTabs(){
+  document.getElementById('tabs').innerHTML = SHEET_NAMES.map(s =>
+    `<div class="tab ${s===activeSheet?'active':''}" onclick="switchTab('${s}')">${s}</div>`).join('');
+}
+function switchTab(s){ activeSheet = s; renderTabs(); renderCalendar(); }
+
+function taskStatus(row){
+  if (!row.start) return 'not-started';
+  const today = new Date(TODAY);
+  const start = new Date(row.start);
+  const end = row.end ? new Date(row.end) : start;
+  if (today < start) return 'not-started';
+  if (today <= end) return 'in-progress';
+  return 'done';
+}
+
+const THAI_MONTHS = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+const THAI_DAYS = ['อา','จ','อ','พ','พฤ','ศ','ส'];
+
+function changeMonth(dir){
+  viewMonth += dir;
+  if (viewMonth < 0){ viewMonth = 11; viewYear--; }
+  if (viewMonth > 11){ viewMonth = 0; viewYear++; }
+  renderCalendar();
+}
+
+function renderCalendar(){
+  document.getElementById('month-title').textContent = THAI_MONTHS[viewMonth] + ' ' + (viewYear+543);
+  document.getElementById('cal-head').innerHTML = THAI_DAYS.map(d=>`<div>${d}</div>`).join('');
+
+  const rows = (STORE[activeSheet] && STORE[activeSheet].rows) || [];
+  const firstDay = new Date(viewYear, viewMonth, 1);
+  const startOffset = firstDay.getDay();
+  const daysInMonth = new Date(viewYear, viewMonth+1, 0).getDate();
+  const daysInPrevMonth = new Date(viewYear, viewMonth, 0).getDate();
+  const totalCells = Math.ceil((startOffset + daysInMonth) / 7) * 7;
+
+  let html = '';
+  for (let i=0;i<totalCells;i++){
+    const dayNum = i - startOffset + 1;
+    let cellDate, out=false;
+    if (dayNum < 1){ cellDate = new Date(viewYear, viewMonth-1, daysInPrevMonth + dayNum); out=true; }
+    else if (dayNum > daysInMonth){ cellDate = new Date(viewYear, viewMonth+1, dayNum-daysInMonth); out=true; }
+    else { cellDate = new Date(viewYear, viewMonth, dayNum); }
+
+    const iso = cellDate.toISOString().slice(0,10);
+    const isToday = iso === TODAY;
+    const dayTasks = rows.filter(r=>{
+      if (!r.start) return false;
+      const s = r.start, e = r.end || r.start;
+      return iso >= s && iso <= e;
+    });
+    const shown = dayTasks.slice(0,3);
+    const extra = dayTasks.length - shown.length;
+
+    html += `<div class="day ${out?'out':''} ${isToday?'today':''}">
+      <div class="num">${cellDate.getDate()}</div>
+      ${shown.map(r=>`<div class="chip ${taskStatus(r)}" onclick="openModal({sheet:'${activeSheet}',rowIndex:${r.rowIndex}})" title="${r.task}">${r.task || '(ไม่มีชื่องาน)'}</div>`).join('')}
+      ${extra>0?`<div class="more">+${extra} งานอื่น</div>`:''}
+    </div>`;
+  }
+  document.getElementById('cal-grid').innerHTML = html;
+}
+
+function populateOrderSelect(sheet, currentOrder){
+  const lookup = (STORE[sheet] && STORE[sheet].lookup) || [];
+  const sel = document.getElementById('f-order');
+  sel.innerHTML = '<option value="">— เลือกลำดับแผน —</option>' +
+    lookup.map(l=>`<option value="${l.order}" ${String(l.order)===String(currentOrder)?'selected':''}>${l.order} — ${l.detail}</option>`).join('');
+}
+function updateDetailPreview(){
+  const sheet = activeSheet;
+  const lookup = (STORE[sheet] && STORE[sheet].lookup) || [];
+  const val = document.getElementById('f-order').value;
+  const found = lookup.find(l=>String(l.order)===String(val));
+  document.getElementById('f-detail-preview').textContent = found ? found.detail : '—';
+}
+
+async function openModal(ref){
+  editing = ref;
+  document.getElementById('gallery-wrap').style.display = 'none';
+  document.getElementById('gallery').innerHTML = '';
+  document.getElementById('modal-status').innerHTML = '';
+  document.getElementById('last-mod').textContent = '';
+
+  let row = null;
+  if (ref){
+    row = (STORE[ref.sheet].rows || []).find(r=>r.rowIndex===ref.rowIndex);
+  }
+  document.getElementById('modal-title').textContent = row ? 'แก้ไขงาน — ' + activeSheet : 'เพิ่มงานใหม่ — ' + activeSheet;
+  populateOrderSelect(activeSheet, row ? row.planOrder : '');
+  document.getElementById('f-start').value = row ? row.start : '';
+  document.getElementById('f-end').value = row ? row.end : '';
+  document.getElementById('f-task').value = row ? row.task : '';
+  document.getElementById('f-editor').value = '';
+  updateDetailPreview();
+
+  if (row){
+    const st = taskStatus(row);
+    const label = st==='done'?'เสร็จแล้ว':st==='in-progress'?'กำลังดำเนินการ':'ยังไม่เริ่ม';
+    const cls = st==='done'?'signal-bg':st==='in-progress'?'yellow-bg':'rust-bg';
+    document.getElementById('modal-status').innerHTML = `<span class="status-badge" style="background:var(--${cls})">${label}</span>`;
+    if (row.lastModified) document.getElementById('last-mod').textContent = 'แก้ไขล่าสุด: ' + row.lastModified;
+    if (row.task){
+      document.getElementById('gallery-wrap').style.display = 'block';
+      document.getElementById('gallery-note').textContent = 'กำลังโหลดรูป...';
+      loadImages(row.task);
+    }
+  }
+  document.getElementById('overlay').classList.add('show');
+}
+function closeModal(){ document.getElementById('overlay').classList.remove('show'); }
+
+async function loadImages(taskName){
+  if (APPS_SCRIPT_URL === 'PASTE_YOUR_WEB_APP_URL_HERE'){
+    document.getElementById('gallery-note').textContent = 'ต้องตั้งค่า APPS_SCRIPT_URL ก่อนถึงจะดึงรูปจาก Drive ได้';
+    return;
+  }
+  try{
+    const res = await fetch(APPS_SCRIPT_URL + '?action=getImages&folder=' + encodeURIComponent(taskName));
+    const json = await res.json();
+    if (json.ok && json.images.length){
+      document.getElementById('gallery').innerHTML = json.images.map(im=>`<img src="${im.url}" alt="${im.name}">`).join('');
+      document.getElementById('gallery-note').textContent = json.images.length + ' รูป';
+    } else {
+      document.getElementById('gallery').innerHTML = '';
+      document.getElementById('gallery-note').textContent = 'ไม่พบโฟลเดอร์รูปชื่อ "' + taskName + '" ใน Drive';
+    }
+  }catch(err){
+    document.getElementById('gallery-note').textContent = 'โหลดรูปไม่สำเร็จ: ' + err.message;
+  }
+}
+
+async function saveTask(){
+  const editorName = document.getElementById('f-editor').value.trim();
+  if (!editorName){ alert('กรุณาพิมพ์ชื่อผู้แก้ไขก่อนบันทึก'); return; }
+  const payload = {
+    action: editing ? 'updateRow' : 'addRow',
+    sheet: activeSheet,
+    rowIndex: editing ? editing.rowIndex : undefined,
+    start: document.getElementById('f-start').value,
+    end: document.getElementById('f-end').value,
+    planOrder: document.getElementById('f-order').value,
+    task: document.getElementById('f-task').value,
+    editorName: editorName
+  };
+  if (APPS_SCRIPT_URL === 'PASTE_YOUR_WEB_APP_URL_HERE'){
+    alert('ยังไม่ได้ตั้งค่า APPS_SCRIPT_URL จึงบันทึกจริงไม่ได้ (นี่คือโหมดตัวอย่าง)');
+    return;
+  }
+  try{
+    const res = await fetch(APPS_SCRIPT_URL, { method:'POST', body: JSON.stringify(payload) });
+    const json = await res.json();
+    if (!json.ok) throw new Error(json.error || 'บันทึกไม่สำเร็จ');
+    closeModal();
+    await loadData();
+  }catch(err){
+    alert('บันทึกไม่สำเร็จ: ' + err.message);
+  }
+}
+
+loadData();
+</script>
+</body>
+</html>
