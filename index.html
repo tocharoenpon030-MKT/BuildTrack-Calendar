@@ -19,6 +19,9 @@ body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);}
 .topbar{background:var(--navy);color:#fff;padding:16px 26px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;}
 .brand{font-family:var(--display);font-weight:800;font-size:22px;}
 .brand small{display:block;font-family:var(--mono);font-size:11px;font-weight:400;color:var(--safety);letter-spacing:1px;text-transform:uppercase;}
+.topbar-links{display:flex;gap:8px;margin-left:auto;}
+.topbar-data-link{background:rgba(255,255,255,.1);color:#fff;border:1.5px solid rgba(255,255,255,.35);padding:7px 13px;font-size:12.5px;}
+.topbar-data-link:hover{background:rgba(255,255,255,.2);}
 #banner{background:var(--rust);color:#fff;padding:8px 26px;font-size:13px;display:none;}
 #banner.show{display:block;}
 
@@ -67,6 +70,20 @@ body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);}
 
 .overlay{position:fixed;inset:0;background:rgba(20,22,20,.5);display:none;align-items:center;justify-content:center;z-index:50;padding:16px;}
 .overlay.show{display:flex;}
+
+.lightbox{position:fixed;inset:0;background:rgba(10,10,10,.94);display:none;align-items:center;justify-content:center;z-index:80;touch-action:pan-y;}
+.lightbox.show{display:flex;}
+.lightbox img{max-width:92vw;max-height:86vh;object-fit:contain;border-radius:4px;user-select:none;-webkit-user-drag:none;}
+.lb-close{position:absolute;top:16px;right:18px;background:none;border:none;color:#fff;font-size:26px;cursor:pointer;line-height:1;padding:6px 10px;}
+.lb-nav{position:absolute;top:50%;transform:translateY(-50%);background:rgba(255,255,255,.12);border:none;color:#fff;font-size:34px;width:52px;height:64px;cursor:pointer;border-radius:6px;display:flex;align-items:center;justify-content:center;}
+.lb-nav:hover{background:rgba(255,255,255,.22);}
+.lb-prev{left:10px;}
+.lb-next{right:10px;}
+.lb-counter{position:absolute;bottom:18px;left:50%;transform:translateX(-50%);color:#fff;font-size:13px;background:rgba(255,255,255,.14);padding:4px 12px;border-radius:20px;}
+@media (max-width:700px){
+  .lb-nav{width:42px;height:56px;font-size:28px;}
+  .lb-close{font-size:22px;top:10px;right:10px;}
+}
 .modal{background:#fff;border-radius:8px;max-width:480px;width:100%;max-height:90vh;overflow:auto;padding:22px;}
 .modal h3{font-family:var(--display);font-size:22px;margin:0 0 14px;}
 .field{margin-bottom:12px;}
@@ -87,6 +104,7 @@ body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);}
 @media (max-width:700px){
   .topbar{padding:12px 14px;}
   .brand{font-size:18px;}
+  .topbar-data-link{padding:6px 10px;font-size:11.5px;}
   #banner{padding:8px 14px;font-size:12px;}
   .tabs{padding:12px 14px 0;gap:6px;}
   .filter-chip{padding:6px 11px;font-size:12px;}
@@ -121,6 +139,10 @@ body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);}
 
 <div class="topbar">
   <div class="brand">SITE//CALENDAR<small>ปฏิทินงานก่อสร้างพัทยา · เชื่อมสด Google Sheets</small></div>
+  <div class="topbar-links">
+    <a class="icon-btn data-link topbar-data-link" href="#" id="data1-btn" target="_blank" rel="noopener">📊 DATA1</a>
+    <a class="icon-btn data-link topbar-data-link" href="#" id="data2-btn" target="_blank" rel="noopener">🖼️ DATA2</a>
+  </div>
 </div>
 <div id="banner"></div>
 
@@ -140,8 +162,6 @@ body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);}
     <span><i style="background:var(--signal-bg);border:1px solid var(--signal)"></i>เสร็จแล้ว</span>
   </div>
   <div class="btn-row">
-    <a class="icon-btn data-link" href="#" id="data1-btn" target="_blank" rel="noopener">📊 DATA1 · ชีตข้อมูล</a>
-    <a class="icon-btn data-link" href="#" id="data2-btn" target="_blank" rel="noopener">🖼️ DATA2 · โฟลเดอร์รูป</a>
     <button class="icon-btn" onclick="openGallery()">📐 ดูแบบก่อสร้าง</button>
     <button class="add-btn" onclick="openModal(null)">+ เพิ่มงานใหม่</button>
   </div>
@@ -167,17 +187,8 @@ body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);}
       <div class="field"><label>วันที่เริ่ม</label><input type="date" id="f-start"></div>
       <div class="field"><label>วันที่สิ้นสุด</label><input type="date" id="f-end"></div>
     </div>
-    <div class="field">
-      <label>ลำดับแผน — เลือกจากลิสต์ หรือพิมพ์เลขใหม่</label>
-      <input type="text" id="f-order" list="order-list" onchange="updateDetailPreview()">
-      <datalist id="order-list"></datalist>
-    </div>
-    <div class="field">
-      <label>รายละเอียดแผน (เติมอัตโนมัติถ้าเลือกลำดับที่มีอยู่ — พิมพ์เองได้ถ้าเป็นลำดับใหม่)</label>
-      <input type="text" id="f-detail-preview" placeholder="พิมพ์รายละเอียดของลำดับแผนนี้">
-    </div>
     <div class="field"><label>งาน</label><input type="text" id="f-task" placeholder="เช่น ตอกเข็ม, วางท่อระบายน้ำ"></div>
-    <div class="field"><label>ชื่อผู้แก้ไข (จะบันทึกไว้ในคอลัมน์ F)</label><input type="text" id="f-editor" placeholder="พิมพ์ชื่อของคุณ"></div>
+    <div class="field"><label>ชื่อผู้แก้ไข (จะบันทึกไว้ในคอลัมน์ D)</label><input type="text" id="f-editor" placeholder="พิมพ์ชื่อของคุณ"></div>
 
     <div id="gallery-wrap" style="display:none;">
       <label style="font-size:12.5px;color:var(--ink-soft);">รูปภาพหน้างานที่เกี่ยวข้อง</label>
@@ -221,6 +232,15 @@ body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);}
   </div>
 </div>
 
+<!-- ไลท์บ็อกซ์ดูรูปเต็มจอ เลื่อนซ้าย-ขวาดูทีละรูป (คลิกลูกศร/ปัดนิ้ว/กดปุ่มลูกศรคีย์บอร์ดได้) -->
+<div class="lightbox" id="lightbox" onclick="lightboxBackdropClick(event)">
+  <button class="lb-close" onclick="closeLightbox()">✕</button>
+  <button class="lb-nav lb-prev" onclick="event.stopPropagation();lightboxNav(-1)">‹</button>
+  <img id="lb-img" src="" alt="">
+  <button class="lb-nav lb-next" onclick="event.stopPropagation();lightboxNav(1)">›</button>
+  <div class="lb-counter" id="lb-counter"></div>
+</div>
+
 <script>
 // ==================== ตั้งค่า ====================
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzFNnpz1L6-n0rb3YFDK5uLyPpXdF4vox3h1Md7ZkyXce_HgvJpSZfg0BwwD1cInAf1/exec';
@@ -251,29 +271,29 @@ function currentSheetNames(){
 const FALLBACK_DATA = {
   data: {
     'อาคารโกดัง': { rows: [
-      {rowIndex:2, start:'2026-07-20', end:'2026-07-20', planOrder:1, planDetail:'ตอกเข็มทำฟุตติ้ง', task:'ตอกเข็ม', lastModified:''},
-      {rowIndex:3, start:'2026-07-21', end:'', planOrder:1, planDetail:'ตอกเข็มทำฟุตติ้ง', task:'ฟุตติ้ง', lastModified:''},
-      {rowIndex:4, start:'2026-07-22', end:'', planOrder:2, planDetail:'ตั้งเสา', task:'ตั้งเสา', lastModified:''},
-      {rowIndex:5, start:'2026-07-29', end:'', planOrder:4, planDetail:'โครงเหล็กหลังคา', task:'โครงหลังคา', lastModified:''},
-      {rowIndex:6, start:'2026-08-08', end:'', planOrder:3, planDetail:'เทพื้น', task:'ไวเมชพื้นเข้า', lastModified:''},
-      {rowIndex:7, start:'2026-08-06', end:'', planOrder:5, planDetail:'มุงหลังคา', task:'เมทัลชีทหลังคาเข้า', lastModified:''}
-    ], lookup:[{order:1,detail:'ตอกเข็มทำฟุตติ้ง'},{order:2,detail:'ตั้งเสา'},{order:3,detail:'เทพื้น'},{order:4,detail:'โครงเหล็กหลังคา'},{order:5,detail:'มุงหลังคา'},{order:6,detail:'โครงเหล็กผนัง'},{order:7,detail:'มุงผนัง'}] },
+      {rowIndex:2, start:'2026-07-20', end:'2026-07-20', task:'ตอกเข็ม', lastModified:''},
+      {rowIndex:3, start:'2026-07-21', end:'', task:'ฟุตติ้ง', lastModified:''},
+      {rowIndex:4, start:'2026-07-22', end:'', task:'ตั้งเสา', lastModified:''},
+      {rowIndex:5, start:'2026-07-29', end:'', task:'โครงหลังคา', lastModified:''},
+      {rowIndex:6, start:'2026-08-08', end:'', task:'ไวเมชพื้นเข้า', lastModified:''},
+      {rowIndex:7, start:'2026-08-06', end:'', task:'เมทัลชีทหลังคาเข้า', lastModified:''}
+    ] },
     'ระบบน้ำ': { rows: [
-      {rowIndex:2, start:'2026-07-17', end:'2026-07-17', planOrder:1, planDetail:'ขุดดิน', task:'รถแบคโฮเข้าขุดวางท่อระบายน้ำ คสล.+วางผังปักหมุดรอตอกเข็ม', lastModified:''},
-      {rowIndex:3, start:'2026-07-18', end:'', planOrder:2, planDetail:'วางระบบท่อ', task:'วางท่อระบายน้ำ', lastModified:''}
-    ], lookup:[{order:1,detail:'ขุดดิน'},{order:2,detail:'วางระบบท่อ'}] },
+      {rowIndex:2, start:'2026-07-17', end:'2026-07-17', task:'รถแบคโฮเข้าขุดวางท่อระบายน้ำ คสล.+วางผังปักหมุดรอตอกเข็ม', lastModified:''},
+      {rowIndex:3, start:'2026-07-18', end:'', task:'วางท่อระบายน้ำ', lastModified:''}
+    ] },
     'คอกทราย': { rows: [
-      {rowIndex:2, start:'2026-07-17', end:'2026-07-17', planOrder:1, planDetail:'วางระบบท่อ', task:'รถแบคโฮเข้าขุดวางท่อระบายน้ำ คสล.+วางผังปักหมุดรอตอกเข็ม', lastModified:''},
-      {rowIndex:3, start:'2026-07-18', end:'', planOrder:1, planDetail:'วางระบบท่อ', task:'วางท่อระบายน้ำ', lastModified:''},
-      {rowIndex:4, start:'2026-07-20', end:'2026-07-20', planOrder:2, planDetail:'ตอกเข็มทำฟุตติ้ง', task:'ตอกเข็ม', lastModified:''},
-      {rowIndex:5, start:'2026-07-21', end:'', planOrder:2, planDetail:'ตอกเข็มทำฟุตติ้ง', task:'ฟุตติ้ง', lastModified:''},
-      {rowIndex:6, start:'2026-07-22', end:'', planOrder:3, planDetail:'ตั้งเสา', task:'ตั้งเสา', lastModified:''},
-      {rowIndex:7, start:'2026-07-29', end:'', planOrder:5, planDetail:'โครงเหล็กหลังคา', task:'โครงหลังคา', lastModified:''},
-      {rowIndex:8, start:'2026-08-05', end:'', planOrder:4, planDetail:'เทพื้น', task:'ไวเมชพื้นเข้า', lastModified:''},
-      {rowIndex:9, start:'2026-08-06', end:'', planOrder:6, planDetail:'มุงหลังคา', task:'เมทัลชีทหลังคาเข้า', lastModified:''}
-    ], lookup:[{order:2,detail:'ฟุตติ้ง'},{order:3,detail:'ทำปลอกคาน'},{order:4,detail:'ตั้งเสา'},{order:5,detail:'ใส่แผ่นพื้น'}] },
-    'ห้องพัก': { rows: [], lookup: [] },
-    'ออฟฟิศ': { rows: [], lookup: [] }
+      {rowIndex:2, start:'2026-07-17', end:'2026-07-17', task:'รถแบคโฮเข้าขุดวางท่อระบายน้ำ คสล.+วางผังปักหมุดรอตอกเข็ม', lastModified:''},
+      {rowIndex:3, start:'2026-07-18', end:'', task:'วางท่อระบายน้ำ', lastModified:''},
+      {rowIndex:4, start:'2026-07-20', end:'2026-07-20', task:'ตอกเข็ม', lastModified:''},
+      {rowIndex:5, start:'2026-07-21', end:'', task:'ฟุตติ้ง', lastModified:''},
+      {rowIndex:6, start:'2026-07-22', end:'', task:'ตั้งเสา', lastModified:''},
+      {rowIndex:7, start:'2026-07-29', end:'', task:'โครงหลังคา', lastModified:''},
+      {rowIndex:8, start:'2026-08-05', end:'', task:'ไวเมชพื้นเข้า', lastModified:''},
+      {rowIndex:9, start:'2026-08-06', end:'', task:'เมทัลชีทหลังคาเข้า', lastModified:''}
+    ] },
+    'ห้องพัก': { rows: [] },
+    'ออฟฟิศ': { rows: [] }
   },
   today: toLocalISO(new Date())
 };
@@ -388,7 +408,7 @@ function renderCalendar(){
       <div class="num">${cellDate.getDate()}</div>
       ${shown.map(r=>{
         const label = (r.task || '(ไม่มีชื่องาน)');
-        const tooltip = `${r.__sheet} | ${label}${r.planDetail?' - '+r.planDetail:''}`;
+        const tooltip = `${r.__sheet} | ${label}`;
         return `<div class="chip ${taskStatus(r)}" onclick="openModal({sheet:'${r.__sheet}',rowIndex:${r.rowIndex}})" title="${tooltip}"><span class="chip-sheet-tag">${r.__sheet}</span>${label}</div>`;
       }).join('')}
       ${extra>0?`<div class="more">+${extra} งานอื่น</div>`:''}
@@ -397,24 +417,8 @@ function renderCalendar(){
   document.getElementById('cal-grid').innerHTML = html;
 }
 
-function populateOrderSelect(sheet, currentOrder){
-  const lookup = (STORE[sheet] && STORE[sheet].lookup) || [];
-  document.getElementById('order-list').innerHTML =
-    lookup.map(l=>`<option value="${l.order}">${l.order} — ${l.detail}</option>`).join('');
-  document.getElementById('f-order').value = currentOrder || '';
-}
-function updateDetailPreview(){
-  const sheet = document.getElementById('f-sheet').value;
-  const lookup = (STORE[sheet] && STORE[sheet].lookup) || [];
-  const val = document.getElementById('f-order').value;
-  const found = lookup.find(l=>String(l.order)===String(val));
-  // เติมอัตโนมัติเฉพาะตอนพบลำดับแผนที่มีอยู่แล้ว ถ้าเป็นลำดับใหม่จะไม่ไปทับข้อความที่ผู้ใช้พิมพ์เอง
-  if (found) document.getElementById('f-detail-preview').value = found.detail;
-}
 function onSheetChange(){
-  const sheet = document.getElementById('f-sheet').value;
-  populateOrderSelect(sheet, '');
-  document.getElementById('f-detail-preview').value = '';
+  // ไม่มีลำดับแผน/รายละเอียดแผนแล้ว จึงไม่ต้องทำอะไรเพิ่มตอนเปลี่ยนหมวดงาน
 }
 
 function refreshSheetList(currentSheet){
@@ -440,13 +444,10 @@ async function openModal(ref){
   sheetInput.readOnly = !!ref; // แก้ไขงานเดิม ห้ามย้ายหมวดงาน, เพิ่มงานใหม่พิมพ์หมวดใหม่ได้
 
   document.getElementById('modal-title').textContent = row ? 'แก้ไขงาน — ' + modalSheet : 'เพิ่มงานใหม่';
-  populateOrderSelect(modalSheet, row ? row.planOrder : '');
   document.getElementById('f-start').value = row ? row.start : '';
   document.getElementById('f-end').value = row ? row.end : '';
   document.getElementById('f-task').value = row ? row.task : '';
   document.getElementById('f-editor').value = '';
-  document.getElementById('f-detail-preview').value = row ? (row.planDetail || '') : '';
-  if (!row) updateDetailPreview();
 
   if (row){
     const st = taskStatus(row);
@@ -477,6 +478,7 @@ async function fetchImagesFor(taskName){
   }
 }
 
+let galleryImagesMap = {}; // เก็บรายการรูปของแต่ละแกลเลอรี ไว้ใช้ตอนเปิดไลท์บ็อกซ์เพื่อเลื่อนซ้าย-ขวา
 function renderGalleryInto(galleryId, noteId, taskName, json){
   const galEl = document.getElementById(galleryId);
   const noteEl = document.getElementById(noteId);
@@ -486,9 +488,11 @@ function renderGalleryInto(galleryId, noteId, taskName, json){
     return;
   }
   if (json.ok && json.images && json.images.length){
-    galEl.innerHTML = json.images.map(im=>`<img src="${im.url}" alt="${im.name}" title="คลิกเพื่อดูรูปขนาดเต็ม" onclick="window.open('${im.url}','_blank')">`).join('');
-    noteEl.textContent = json.images.length + ' รูป (คลิกรูปเพื่อดูขนาดเต็ม/บันทึกรูป)';
+    galleryImagesMap[galleryId] = json.images;
+    galEl.innerHTML = json.images.map((im,idx)=>`<img src="${im.url}" alt="${im.name}" title="คลิกเพื่อดูรูปเต็มจอ" onclick="openLightbox('${galleryId}', ${idx})">`).join('');
+    noteEl.textContent = json.images.length + ' รูป (คลิกรูปเพื่อดูเต็มจอ เลื่อนซ้าย-ขวาดูรูปอื่นได้)';
   } else {
+    galleryImagesMap[galleryId] = [];
     galEl.innerHTML = '';
     noteEl.textContent = json.ok
       ? ('ยังไม่พบรูปในโฟลเดอร์ "' + taskName + '" ใน Drive')
@@ -528,9 +532,6 @@ async function saveTask(){
   if (!editorName){ alert('กรุณาพิมพ์ชื่อผู้แก้ไขก่อนบันทึก'); return; }
   const sheet = document.getElementById('f-sheet').value.trim();
   if (!sheet){ alert('กรุณาเลือกหรือพิมพ์ชื่อหมวดงานก่อนบันทึก'); return; }
-  const planOrder = document.getElementById('f-order').value.trim();
-  const planDetail = document.getElementById('f-detail-preview').value.trim();
-  if (planOrder && !planDetail){ alert('กรุณากรอกรายละเอียดแผนของลำดับแผนนี้ด้วย'); return; }
   const isNew = !editing;
   const isNewSheet = !currentSheetNames().includes(sheet);
   const payload = {
@@ -540,8 +541,6 @@ async function saveTask(){
     rowIndex: editing ? editing.rowIndex : undefined,
     start: document.getElementById('f-start').value,
     end: document.getElementById('f-end').value,
-    planOrder: planOrder,
-    planDetail: planDetail,
     task: document.getElementById('f-task').value,
     editorName: editorName
   };
@@ -572,7 +571,6 @@ function showSuccessModal(isNew, payload){
   document.getElementById('success-content').innerHTML = `
     <div><b>หมวดงาน:</b> ${payload.sheet}${payload.isNewSheet ? ' (สร้างแท็บใหม่)' : ''}</div>
     <div><b>งาน:</b> ${payload.task || '(ไม่มีชื่องาน)'}</div>
-    <div><b>ลำดับแผน:</b> ${payload.planOrder || '—'} ${payload.planDetail ? '— '+payload.planDetail : ''}</div>
     <div><b>วันที่เริ่ม:</b> ${fmtThaiDate(payload.start)}</div>
     <div><b>วันที่สิ้นสุด:</b> ${payload.end ? fmtThaiDate(payload.end) : 'ยังไม่กำหนด (กำลังดำเนินการ)'}</div>
     <div><b>ผู้บันทึก:</b> ${payload.editorName}</div>
@@ -582,6 +580,54 @@ function showSuccessModal(isNew, payload){
 function closeSuccessModal(){
   document.getElementById('successOverlay').classList.remove('show');
 }
+
+// ==================== ไลท์บ็อกซ์ดูรูปเต็มจอ (เลื่อนซ้าย-ขวา) ====================
+let lightboxImages = [];
+let lightboxIndex = 0;
+function openLightbox(galleryId, idx){
+  lightboxImages = galleryImagesMap[galleryId] || [];
+  if (!lightboxImages.length) return;
+  lightboxIndex = idx;
+  renderLightbox();
+  document.getElementById('lightbox').classList.add('show');
+}
+function renderLightbox(){
+  const im = lightboxImages[lightboxIndex];
+  if (!im) return;
+  document.getElementById('lb-img').src = im.url;
+  document.getElementById('lb-img').alt = im.name;
+  document.getElementById('lb-counter').textContent = (lightboxIndex+1) + ' / ' + lightboxImages.length;
+}
+function lightboxNav(delta){
+  if (!lightboxImages.length) return;
+  lightboxIndex = (lightboxIndex + delta + lightboxImages.length) % lightboxImages.length;
+  renderLightbox();
+}
+function closeLightbox(){
+  document.getElementById('lightbox').classList.remove('show');
+}
+function lightboxBackdropClick(ev){
+  // ปิดไลท์บ็อกซ์เมื่อคลิกพื้นหลังสีดำ (ไม่ใช่ตัวรูปหรือปุ่ม)
+  if (ev.target.id === 'lightbox') closeLightbox();
+}
+document.addEventListener('keydown', (ev)=>{
+  if (!document.getElementById('lightbox').classList.contains('show')) return;
+  if (ev.key === 'ArrowLeft') lightboxNav(-1);
+  else if (ev.key === 'ArrowRight') lightboxNav(1);
+  else if (ev.key === 'Escape') closeLightbox();
+});
+// รองรับปัดนิ้วซ้าย-ขวาบนมือถือ
+(function(){
+  let touchStartX = null;
+  const lb = document.getElementById('lightbox');
+  lb.addEventListener('touchstart', e=>{ touchStartX = e.changedTouches[0].clientX; }, {passive:true});
+  lb.addEventListener('touchend', e=>{
+    if (touchStartX === null) return;
+    const dx = e.changedTouches[0].clientX - touchStartX;
+    if (Math.abs(dx) > 40){ dx < 0 ? lightboxNav(1) : lightboxNav(-1); }
+    touchStartX = null;
+  }, {passive:true});
+})();
 
 document.getElementById('data1-btn').href = DATA1_URL;
 document.getElementById('data2-btn').href = DATA2_URL;
