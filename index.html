@@ -66,10 +66,26 @@ body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);}
 .chip.not-started{background:var(--rust-bg);border-color:var(--rust);color:#5b2a1a;}
 .chip.in-progress{background:var(--yellow-bg);border-color:var(--yellow-line);color:#5b3e00;}
 .chip.done{background:var(--signal-bg);border-color:var(--signal);color:#183a28;}
-.more{font-size:10.5px;color:var(--ink-soft);margin-top:2px;cursor:pointer;}
+.more{font-size:10.5px;color:var(--ink-soft);margin-top:2px;cursor:pointer;text-decoration:underline;}
+.num{cursor:pointer;}
+.num:hover{text-decoration:underline;}
+.day-detail-list{display:flex;flex-direction:column;gap:8px;max-height:60vh;overflow:auto;}
+.ddi{border:1px solid var(--grid-line);border-left-width:4px;border-radius:6px;padding:8px 10px;cursor:pointer;}
+.ddi:hover{background:#f7f5ef;}
+.ddi.not-started{border-left-color:var(--rust);}
+.ddi.in-progress{border-left-color:var(--yellow-line);}
+.ddi.done{border-left-color:var(--signal);}
+.ddi-task{font-weight:600;margin-top:3px;font-size:14px;}
+.ddi-date{font-family:var(--mono);font-size:11.5px;color:var(--ink-soft);margin-top:2px;}
+.ddi-empty{color:var(--ink-soft);font-size:13px;padding:8px 0;}
 
 .overlay{position:fixed;inset:0;background:rgba(20,22,20,.5);display:none;align-items:center;justify-content:center;z-index:50;padding:16px;}
 .overlay.show{display:flex;}
+.img-preview-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;}
+.img-preview-item{position:relative;width:64px;height:64px;}
+.img-preview-item img{width:100%;height:100%;object-fit:cover;border-radius:5px;border:1px solid var(--grid-line);}
+.img-preview-item button{position:absolute;top:-6px;right:-6px;width:20px;height:20px;border-radius:50%;background:var(--rust);color:#fff;border:none;font-size:11px;line-height:1;cursor:pointer;}
+.img-upload-status{font-size:12px;color:var(--ink-soft);margin-top:6px;}
 
 .lightbox{position:fixed;inset:0;background:rgba(10,10,10,.94);display:none;align-items:center;justify-content:center;z-index:80;touch-action:pan-y;}
 .lightbox.show{display:flex;}
@@ -189,6 +205,11 @@ body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);}
     </div>
     <div class="field"><label>งาน</label><input type="text" id="f-task" placeholder="เช่น ตอกเข็ม, วางท่อระบายน้ำ"></div>
     <div class="field"><label>ชื่อผู้แก้ไข (จะบันทึกไว้ในคอลัมน์ D)</label><input type="text" id="f-editor" placeholder="พิมพ์ชื่อของคุณ"></div>
+    <div class="field">
+      <label>แนบรูปหน้างาน (จะบันทึกลงโฟลเดอร์ Drive ชื่อตรงกับ "งาน" ด้านบน — ถ้ายังไม่มีโฟลเดอร์จะสร้างให้อัตโนมัติ)</label>
+      <input type="file" id="f-images" accept="image/*" multiple capture="environment" onchange="onImagesSelected(event)">
+      <div class="img-preview-row" id="f-images-preview"></div>
+    </div>
 
     <div id="gallery-wrap" style="display:none;">
       <label style="font-size:12.5px;color:var(--ink-soft);">รูปภาพหน้างานที่เกี่ยวข้อง</label>
@@ -199,7 +220,7 @@ body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);}
 
     <div class="modal-actions">
       <button class="btn cancel" onclick="closeModal()">ยกเลิก</button>
-      <button class="btn save" onclick="saveTask()">บันทึก</button>
+      <button class="btn save" id="save-btn" onclick="saveTask()">บันทึก</button>
     </div>
   </div>
 </div>
@@ -232,6 +253,17 @@ body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);}
   </div>
 </div>
 
+<!-- หน้าต่างดูรายวัน แสดงงานทั้งหมดของวันที่เลือก -->
+<div class="overlay" id="dayDetailOverlay">
+  <div class="modal" style="max-width:420px;">
+    <h3 id="day-detail-title">งานวันที่</h3>
+    <div id="day-detail-list" class="day-detail-list"></div>
+    <div class="modal-actions">
+      <button class="btn cancel" onclick="closeDayDetail()">ปิด</button>
+    </div>
+  </div>
+</div>
+
 <!-- ไลท์บ็อกซ์ดูรูปเต็มจอ เลื่อนซ้าย-ขวาดูทีละรูป (คลิกลูกศร/ปัดนิ้ว/กดปุ่มลูกศรคีย์บอร์ดได้) -->
 <div class="lightbox" id="lightbox" onclick="lightboxBackdropClick(event)">
   <button class="lb-close" onclick="closeLightbox()">✕</button>
@@ -243,7 +275,7 @@ body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);}
 
 <script>
 // ==================== ตั้งค่า ====================
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw_kSiPJ6744EBEyMr7voPmJqC7xoLpYLlrkajQDop7iPFguQmS1s-W1-ZowFrvivYA/exec';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxEeJ0R23tGHHAsKwX6jMC5ms-Qkzmng89WGe9eGFnYjhLkmYGfPt9zkETuck80WFPM/exec';
 // ลิงก์ด่วนไปยัง Google Drive: DATA1 = ชีตข้อมูลหลัก, DATA2 = โฟลเดอร์เก็บรูปภาพหน้างาน
 const DATA1_URL = 'https://docs.google.com/spreadsheets/d/1QlIXGMLY6cqY7ctJnw_2RI67MO6D0f8DKRxys1sBrfc/edit?usp=sharing';
 const DATA2_URL = 'https://drive.google.com/drive/folders/1UP1YBOJ435aGd3nhSzkO2Z2h1MhgQfBF?usp=sharing';
@@ -305,6 +337,7 @@ let activeSheets = new Set(DEFAULT_SHEET_NAMES); // ทุกหมวดงา�
 let currentGallerySheet = null; // หมวดงานที่เลือกอยู่ในคลังรูปภาพ
 let viewYear, viewMonth; // ค.ศ. (Gregorian) ภายใน, แสดงผลเป็น พ.ศ.
 let editing = null; // {sheet, rowIndex} หรือ null = งานใหม่
+let DAY_TASKS_MAP = {}; // iso date -> รายการงานทั้งหมดของวันนั้น (ใช้เปิดหน้าต่างดูรายวัน)
 
 async function loadData(){
   if (APPS_SCRIPT_URL === 'PASTE_YOUR_WEB_APP_URL_HERE') {
@@ -384,6 +417,7 @@ function renderCalendar(){
   const totalCells = Math.ceil((startOffset + daysInMonth) / 7) * 7;
 
   let html = '';
+  DAY_TASKS_MAP = {}; // เก็บงานทั้งหมดของแต่ละวันไว้ ให้หน้าต่างดูรายวันเรียกใช้ได้
   for (let i=0;i<totalCells;i++){
     const dayNum = i - startOffset + 1;
     let cellDate, out=false;
@@ -401,20 +435,47 @@ function renderCalendar(){
       const e = r.end || (TODAY >= s ? TODAY : s);
       return iso >= s && iso <= e;
     });
+    DAY_TASKS_MAP[iso] = dayTasks;
     const shown = dayTasks.slice(0,4);
     const extra = dayTasks.length - shown.length;
 
     html += `<div class="day ${out?'out':''} ${isToday?'today':''}">
-      <div class="num">${cellDate.getDate()}</div>
+      <div class="num" onclick="openDayDetail('${iso}')">${cellDate.getDate()}</div>
       ${shown.map(r=>{
         const label = (r.task || '(ไม่มีชื่องาน)');
         const tooltip = `${r.__sheet} | ${label}`;
         return `<div class="chip ${taskStatus(r)}" onclick="openModal({sheet:'${r.__sheet}',rowIndex:${r.rowIndex}})" title="${tooltip}"><span class="chip-sheet-tag">${r.__sheet}</span>${label}</div>`;
       }).join('')}
-      ${extra>0?`<div class="more">+${extra} งานอื่น</div>`:''}
+      ${extra>0?`<div class="more" onclick="openDayDetail('${iso}')">+${extra} งานอื่น</div>`:''}
     </div>`;
   }
   document.getElementById('cal-grid').innerHTML = html;
+}
+
+// ==================== หน้าต่างดูรายวัน (คลิกเลขวันที่ หรือ "+N งานอื่น") ====================
+function openDayDetail(iso){
+  const tasks = DAY_TASKS_MAP[iso] || [];
+  const d = new Date(iso + 'T00:00:00');
+  const thaiDate = d.toLocaleDateString('th-TH', { day:'numeric', month:'long', year:'numeric' });
+  document.getElementById('day-detail-title').textContent = 'งานวันที่ ' + thaiDate;
+  const listEl = document.getElementById('day-detail-list');
+  if (!tasks.length){
+    listEl.innerHTML = '<div class="ddi-empty">ไม่มีงานในวันนี้</div>';
+  } else {
+    listEl.innerHTML = tasks.map(r=>{
+      const label = r.task || '(ไม่มีชื่องาน)';
+      const dateRange = r.start + (r.end ? (' → ' + r.end) : ' → กำลังดำเนินการ');
+      return `<div class="ddi ${taskStatus(r)}" onclick="closeDayDetail();openModal({sheet:'${r.__sheet}',rowIndex:${r.rowIndex}})">
+        <span class="chip-sheet-tag">${r.__sheet}</span>
+        <div class="ddi-task">${label}</div>
+        <div class="ddi-date">${dateRange}</div>
+      </div>`;
+    }).join('');
+  }
+  document.getElementById('dayDetailOverlay').classList.add('show');
+}
+function closeDayDetail(){
+  document.getElementById('dayDetailOverlay').classList.remove('show');
 }
 
 function onSheetChange(){
@@ -432,6 +493,9 @@ async function openModal(ref){
   document.getElementById('gallery').innerHTML = '';
   document.getElementById('modal-status').innerHTML = '';
   document.getElementById('last-mod').textContent = '';
+  selectedImageFiles = [];
+  document.getElementById('f-images').value = '';
+  document.getElementById('f-images-preview').innerHTML = '';
 
   let row = null;
   if (ref){
@@ -527,6 +591,63 @@ async function selectGalleryCategory(sheet){
   renderGalleryInto('gallery-browse', 'gallery-browse-note', sheet, json);
 }
 
+// ==================== แนบรูปตอนเพิ่ม/แก้ไขงาน ====================
+let selectedImageFiles = []; // ไฟล์รูปที่เลือกไว้ รอบีบอัด+อัปโหลดตอนกดบันทึก
+
+function onImagesSelected(ev){
+  selectedImageFiles = selectedImageFiles.concat(Array.from(ev.target.files || []));
+  ev.target.value = ''; // เคลียร์ input ไว้ เผื่อเลือกไฟล์เดิมซ้ำได้อีก
+  renderImagePreview();
+}
+function removeSelectedImage(i){
+  selectedImageFiles.splice(i, 1);
+  renderImagePreview();
+}
+function renderImagePreview(){
+  document.getElementById('f-images-preview').innerHTML = selectedImageFiles.map((f,i)=>
+    `<div class="img-preview-item"><img src="${URL.createObjectURL(f)}"><button type="button" onclick="removeSelectedImage(${i})">✕</button></div>`
+  ).join('');
+}
+
+// บีบอัด/ย่อขนาดรูปฝั่งเบราว์เซอร์ก่อนส่ง (ช่วยให้อัปโหลดเร็วขึ้นมากบนมือถือ/เน็ตช้า)
+function compressImageFile(file, maxDim=1600, quality=0.75){
+  return new Promise((resolve, reject)=>{
+    const reader = new FileReader();
+    reader.onerror = ()=>reject(new Error('อ่านไฟล์รูปไม่สำเร็จ'));
+    reader.onload = (e)=>{
+      const img = new Image();
+      img.onerror = ()=>reject(new Error('เปิดไฟล์รูปไม่สำเร็จ'));
+      img.onload = ()=>{
+        let w = img.width, h = img.height;
+        if (w > maxDim || h > maxDim){
+          if (w > h){ h = Math.round(h * maxDim / w); w = maxDim; }
+          else { w = Math.round(w * maxDim / h); h = maxDim; }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        const dataUrl = canvas.toDataURL('image/jpeg', quality);
+        const safeName = (file.name || 'photo').replace(/\.[^.]+$/, '').replace(/[^a-zA-Z0-9ก-๙_\- ]/g,'') || 'photo';
+        resolve({ name: safeName + '.jpg', mimeType: 'image/jpeg', data: dataUrl.split(',')[1] });
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+// อัปโหลดรูปที่เลือกไว้ทั้งหมดไปที่โฟลเดอร์ Drive ชื่อตรงกับชื่องาน (สร้างโฟลเดอร์ให้อัตโนมัติถ้ายังไม่มี)
+async function uploadSelectedImages(folderName){
+  if (!selectedImageFiles.length) return { ok:true, saved: [] };
+  const images = await Promise.all(selectedImageFiles.map(f=>compressImageFile(f)));
+  const res = await fetch(APPS_SCRIPT_URL, {
+    method: 'POST',
+    body: JSON.stringify({ action:'uploadImages', folderName: folderName, images: images })
+  });
+  return await res.json();
+}
+
+
 async function saveTask(){
   const editorName = document.getElementById('f-editor').value.trim();
   if (!editorName){ alert('กรุณาพิมพ์ชื่อผู้แก้ไขก่อนบันทึก'); return; }
@@ -548,14 +669,37 @@ async function saveTask(){
     alert('ยังไม่ได้ตั้งค่า APPS_SCRIPT_URL จึงบันทึกจริงไม่ได้ (นี่คือโหมดตัวอย่าง)');
     return;
   }
+  const saveBtn = document.getElementById('save-btn');
+  const originalBtnText = saveBtn.textContent;
+  saveBtn.disabled = true;
   try{
+    saveBtn.textContent = 'กำลังบันทึก...';
     const res = await fetch(APPS_SCRIPT_URL, { method:'POST', body: JSON.stringify(payload) });
     const json = await res.json();
     if (!json.ok) throw new Error(json.error || 'บันทึกไม่สำเร็จ');
+
+    let uploadResult = null;
+    if (selectedImageFiles.length){
+      if (!payload.task){
+        alert('บันทึกงานสำเร็จ แต่ไม่ได้แนบรูป เพราะยังไม่ได้พิมพ์ชื่องาน (ต้องมีชื่องานก่อนถึงจะรู้ว่าเก็บรูปไว้โฟลเดอร์ไหน)');
+      } else {
+        saveBtn.textContent = `กำลังอัปโหลดรูป (${selectedImageFiles.length} รูป)...`;
+        try{
+          uploadResult = await uploadSelectedImages(payload.task);
+          if (!uploadResult.ok) alert('บันทึกงานสำเร็จ แต่แนบรูปไม่สำเร็จ: ' + (uploadResult.error || 'ไม่ทราบสาเหตุ'));
+        }catch(imgErr){
+          alert('บันทึกงานสำเร็จ แต่แนบรูปไม่สำเร็จ: ' + imgErr.message);
+        }
+      }
+    }
+
     await loadData();
-    showSuccessModal(isNew, payload);
+    showSuccessModal(isNew, payload, uploadResult);
   }catch(err){
     alert('บันทึกไม่สำเร็จ: ' + err.message);
+  }finally{
+    saveBtn.disabled = false;
+    saveBtn.textContent = originalBtnText;
   }
 }
 
@@ -565,15 +709,18 @@ function fmtThaiDate(iso){
   return d.getDate() + ' ' + THAI_MONTHS[d.getMonth()] + ' ' + (d.getFullYear()+543);
 }
 
-function showSuccessModal(isNew, payload){
+function showSuccessModal(isNew, payload, uploadResult){
   closeModal();
   document.getElementById('success-title').textContent = isNew ? 'เพิ่มงานใหม่สำเร็จ ✅' : 'แก้ไขงานสำเร็จ ✅';
+  const imgLine = (uploadResult && uploadResult.ok && uploadResult.saved && uploadResult.saved.length)
+    ? `<div><b>รูปที่แนบ:</b> บันทึกแล้ว ${uploadResult.saved.length} รูป</div>` : '';
   document.getElementById('success-content').innerHTML = `
     <div><b>หมวดงาน:</b> ${payload.sheet}${payload.isNewSheet ? ' (สร้างแท็บใหม่)' : ''}</div>
     <div><b>งาน:</b> ${payload.task || '(ไม่มีชื่องาน)'}</div>
     <div><b>วันที่เริ่ม:</b> ${fmtThaiDate(payload.start)}</div>
     <div><b>วันที่สิ้นสุด:</b> ${payload.end ? fmtThaiDate(payload.end) : 'ยังไม่กำหนด (กำลังดำเนินการ)'}</div>
     <div><b>ผู้บันทึก:</b> ${payload.editorName}</div>
+    ${imgLine}
   `;
   document.getElementById('successOverlay').classList.add('show');
 }
