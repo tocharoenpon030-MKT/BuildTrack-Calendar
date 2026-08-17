@@ -53,12 +53,18 @@ body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);}
 .add-btn{background:var(--ink);color:#fff;border:none;padding:10px 16px;border-radius:6px;cursor:pointer;font-size:13.5px;}
 .add-btn:hover{opacity:.85;}
 
-.cal-wrap{max-width:1200px;margin:16px auto 40px;padding:0 26px;}
-.cal{background:var(--paper-card);border:1px solid var(--grid-line);border-radius:6px;overflow:hidden;}
-.cal-head{display:grid;grid-template-columns:repeat(7,1fr);background:var(--navy);}
+/* ==================== ตารางปฏิทิน: เลื่อนซ้าย-ขวาได้ทุกขนาดจอ ====================
+   หัวตาราง (.cal-head) และช่องวันที่ (.cal-grid) ถูกครอบไว้ใน .cal ก้อนเดียวกัน
+   และ .cal-wrap เป็นตัวที่ scroll แนวนอน ดังนั้นเวลาเลื่อน หัวตารางกับวันที่จะเลื่อนไปด้วยกันเสมอ
+   ทั้งสองใช้ grid-template-columns เดียวกันเป๊ะ (repeat(7,minmax(...,1fr))) จึงตรงคอลัมน์กันเสมอ
+   ไม่ว่าช่องไหนจะมีชื่องานยาวแค่ไหนก็ไม่ทำให้คอลัมน์เพี้ยน เพราะ .day ถูกล็อกไม่ให้ขยายเกิน
+*/
+.cal-wrap{max-width:1200px;margin:16px auto 40px;padding:0 26px;overflow-x:auto;-webkit-overflow-scrolling:touch;}
+.cal{background:var(--paper-card);border:1px solid var(--grid-line);border-radius:6px;overflow:hidden;width:max-content;min-width:100%;}
+.cal-head{display:grid;grid-template-columns:repeat(7,minmax(100px,1fr));background:var(--navy);}
 .cal-head div{padding:8px 0;text-align:center;font-family:var(--mono);font-size:11.5px;color:var(--paper-on-navy);text-transform:uppercase;}
-.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);}
-.day{min-height:108px;border-right:1px solid var(--grid-line);border-bottom:1px solid var(--grid-line);padding:6px;position:relative;}
+.cal-grid{display:grid;grid-template-columns:repeat(7,minmax(100px,1fr));}
+.day{min-height:108px;min-width:0;overflow:hidden;border-right:1px solid var(--grid-line);border-bottom:1px solid var(--grid-line);padding:6px;position:relative;}
 .day.out{background:#DAD6C7;}
 .day .num{font-family:var(--mono);font-size:12px;color:var(--ink-soft);}
 .day.today .num{background:var(--ink);color:#fff;border-radius:50%;width:20px;height:20px;display:inline-flex;align-items:center;justify-content:center;}
